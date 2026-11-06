@@ -8,32 +8,8 @@
     "nasaId": "PIA03654"
   },
   {
-    "id": "tarantula",
-    "position": 2,
-    "image": "../assets/cosmos/tarantula.webp",
-    "title": "A New View of the Tarantula Nebula",
-    "credit": "X-ray: NASA/CXC/PSU/L. Townsley et al.; Optical: NASA/STScI; Infrared: NASA/JPL/PSU/L. Townsley et al.",
-    "nasaId": "PIA14415"
-  },
-  {
-    "id": "infrared-helix",
-    "position": 3,
-    "image": "../assets/cosmos/infrared-helix.webp",
-    "title": "The Infrared Helix",
-    "credit": "NASA/JPL-Caltech/Harvard-Smithsonian CfA",
-    "nasaId": "PIA03294"
-  },
-  {
-    "id": "eagle",
-    "position": 4,
-    "image": "../assets/cosmos/eagle.webp",
-    "title": "The Eagle Nebula Observed by WISE",
-    "credit": "NASA/JPL-Caltech",
-    "nasaId": "PIA25433"
-  },
-  {
     "id": "peony",
-    "position": 5,
+    "position": 2,
     "image": "../assets/cosmos/peony.webp",
     "title": "Peony Nebula Star Settles for Silver Medal",
     "credit": "NASA/JPL-Caltech/Potsdam Univ.",
@@ -41,7 +17,7 @@
   },
   {
     "id": "spider",
-    "position": 6,
+    "position": 3,
     "image": "../assets/cosmos/spider.webp",
     "title": "The Spider Nebula",
     "credit": "NASA/JPL-Caltech/2MASS",
@@ -49,7 +25,7 @@
   },
   {
     "id": "trifid",
-    "position": 7,
+    "position": 4,
     "image": "../assets/cosmos/trifid.webp",
     "title": "Storm of Stars in the Trifid Nebula",
     "credit": "NASA/JPL-Caltech/UCLA",
