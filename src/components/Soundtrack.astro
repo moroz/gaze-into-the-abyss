@@ -55,8 +55,8 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
   .music-toggle:global(.is-playing) .icon-pause { display: block; }
   :global(.is-idle) .music-toggle:not(:focus-visible) { opacity: 0; }
 
-  .now-playing { margin: 0 0 6px; padding: 8px 14px; border-radius: 14px; background: #000000b3; color: #ffffffd9; font-size: 12px; line-height: 1.45; opacity: 0; pointer-events: none; transition: opacity .4s; }
+  .now-playing { margin: 0 0 6px; padding: 8px 14px; border-radius: 14px; background: #000000b3; color: #ffffffd9; font-size: 12px; line-height: 1.45; transition: opacity .6s; }
   .now-title { color: #ffffff; font-weight: 600; letter-spacing: .04em; }
   .now-edition { display: block; color: #9fe9ff; }
-  .music:hover .now-playing, .music:focus-within .now-playing { opacity: 1; pointer-events: auto; }
+  :global(.is-idle) .music:not(:hover, :focus-within) .now-playing { opacity: 0; pointer-events: none; }
 </style>
