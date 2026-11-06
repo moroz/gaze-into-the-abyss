@@ -27,7 +27,7 @@ FADE_OUT_SECONDS = 8.0
 GENERAL_MIDI = {
     "celesta": 8, "vibraphone": 11, "church organ": 19, "harp": 46, "french horn": 60,
     "pan flute": 75, "shakuhachi": 77, "ocarina": 79, "warm pad": 89, "bowed glass pad": 92, "kalimba": 108,
-    "taiko": 116,
+    "tinkle bell": 112, "taiko": 116,
 }
 
 
@@ -52,11 +52,12 @@ BAND = {
     "violas": Voice("harp", -10, 0.75),
     "cellos": Voice("bowed glass pad", 0, 0.75),
     "basses": Voice("warm pad", 0, 0.7),
+    "triangle": Voice("tinkle bell", 0, 0.6),
 }
 
 PART_NAMES = {
     "flauti": "flute", "flauti2": "flute", "oboi": "oboe", "clarinetti": "clarinet", "fagotti": "bassoon",
-    "corni_first": "first horn", "corni_second": "second horn", "trumpet": "trumpet", "timpani": "timpani",
+    "corni": "first horn", "corni_first": "first horn", "corni_second": "second horn", "trumpet": "trumpet", "timpani": "timpani",
     "solo": "solo",
     "violin_one": "first violins", "violiniI": "first violins",
     "violin_two": "second violins", "violiniII": "second violins",
@@ -68,32 +69,43 @@ PART_NAMES = {
 
 class Piece(NamedTuple):
     output: str
-    source_zip: str
+    source: str
     member: str
     slowdown: float
-    last_bar: int | None = None
+    last_bar: int | None
+    parts: list[str] | None
 
 
 def playlist() -> list[Piece]:
     entries = sorted(json.loads(PLAYLIST.read_text()), key=lambda entry: entry["position"])
-    return [Piece(entry["file"], entry["sourceZip"], entry["member"], entry["slowdown"], entry.get("lastBar"))
+    return [Piece(entry["file"], entry.get("sourceZip") or entry["midi"], entry["member"], entry["slowdown"],
+                  entry.get("lastBar"), entry.get("parts"))
             for entry in entries]
 
 
-def part_of(track: mido.MidiTrack) -> str | None:
-    if not any(message.type == "note_on" for message in track):
-        return None
-    name = track.name.split(":")[0]
+def part_names(midi: mido.MidiFile, piece: Piece) -> list[str | None]:
+    playing = [any(message.type == "note_on" for message in track) for track in midi.tracks]
+    if piece.parts is None:
+        return [part_named(track.name) if plays else None for track, plays in zip(midi.tracks, playing)]
+    if len(piece.parts) != sum(playing):
+        raise SystemExit(f"{piece.output} lists {len(piece.parts)} parts for {sum(playing)} playing tracks")
+    listed = iter(piece.parts)
+    return [next(listed) if plays else None for plays in playing]
+
+
+def part_named(track_name: str) -> str:
+    name = track_name.split(":")[0]
     if name not in PART_NAMES:
-        raise SystemExit(f"no band member plays the part {track.name!r}")
+        raise SystemExit(f"no band member plays the part {track_name!r}")
     return PART_NAMES[name]
 
 
 def recast(source: mido.MidiFile, piece: Piece) -> mido.MidiFile:
-    for track in source.tracks:
+    for track, part in zip(source.tracks, part_names(source, piece)):
         if piece.last_bar:
             end_at_bar(track, piece.last_bar * 4 * source.ticks_per_beat)
-        part = part_of(track)
+        if part is not None and part not in BAND:
+            raise SystemExit(f"{piece.output} names {part!r}, which is not in the band")
         voice = BAND[part] if part else Voice(None, 0, 1)
         messages = []
         for message in track:
@@ -167,9 +179,11 @@ def finish(samples: np.ndarray, music_seconds: float, cut_short: bool) -> np.nda
 
 
 def render(piece: Piece, work: Path) -> None:
-    with urllib.request.urlopen(piece.source_zip) as response:
-        archive = zipfile.ZipFile(io.BytesIO(response.read()))
-    midi = recast(mido.MidiFile(file=io.BytesIO(archive.read(piece.member))), piece)
+    with urllib.request.urlopen(piece.source) as response:
+        download = response.read()
+    if piece.source.endswith(".zip"):
+        download = zipfile.ZipFile(io.BytesIO(download)).read(piece.member)
+    midi = recast(mido.MidiFile(file=io.BytesIO(download)), piece)
     midi.save(work / "recast.mid")
     subprocess.run(["fluidsynth", "-ni", "-q", "-g", "0.5", "-r", str(RATE), "-R", "1", "-C", "1",
                     "-o", "synth.reverb.room-size=0.95", "-o", "synth.reverb.damp=0.3",

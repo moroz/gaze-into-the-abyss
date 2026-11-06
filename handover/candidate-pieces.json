@@ -1,0 +1,122 @@
+[
+  {
+    "id": "allegretto",
+    "position": 3,
+    "file": "allegretto-adrift.mp3",
+    "title": "Allegretto, Adrift",
+    "composer": "Ludwig van Beethoven",
+    "work": "Symphony No. 7 in A major, Op. 92, II. Allegretto (1811–12)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Mutopia Project edition by Stelios Samelis after Litolff, public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=595",
+    "midi": "https://www.mutopiaproject.org/ftp/BeethovenLv/O92/Symphony7_2/Symphony7_2.mid",
+    "member": "Symphony7_2.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "flute",
+      "oboe",
+      "clarinet",
+      "bassoon",
+      "first horn",
+      "second horn",
+      "timpani",
+      "first violins",
+      "second violins",
+      "violas",
+      "cellos",
+      "basses"
+    ]
+  },
+  {
+    "id": "canzonetta",
+    "position": 4,
+    "file": "canzonetta-adrift.mp3",
+    "title": "Canzonetta, Adrift",
+    "composer": "Pyotr Ilyich Tchaikovsky",
+    "work": "Violin Concerto in D major, Op. 35, II. Canzonetta (1878)",
+    "arrangement": "At 75% of the written tempo, the solo part on French horn.",
+    "edition": "Mutopia Project edition by Will Oram after Eulenburg (1920), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=466",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/TchaikovskyPI/O35/tchai_op35/tchai_op35-mids.zip",
+    "member": "tchai_op35-1.mid",
+    "slowdown": 0.75
+  },
+  {
+    "id": "lento",
+    "position": 5,
+    "file": "lento-adrift.mp3",
+    "title": "Lento, Adrift",
+    "composer": "Antonín Dvořák",
+    "work": "String Quartet No. 12 in F major \"American\", Op. 96, II. Lento (1893)",
+    "arrangement": "At 75% of the written tempo.",
+    "edition": "Mutopia Project edition by Sébastien Manen after Simrock (1894), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=2211",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/DvorakA/O96/dvorak-o96/dvorak-o96-mids.zip",
+    "member": "dvorak-o96-1.mid",
+    "slowdown": 0.75,
+    "parts": [
+      "first violins",
+      "second violins",
+      "violas",
+      "cellos"
+    ]
+  },
+  {
+    "id": "anitra",
+    "position": 6,
+    "file": "anitras-dance-adrift.mp3",
+    "title": "Anitra, Adrift",
+    "composer": "Edvard Grieg",
+    "work": "Peer Gynt Suite No. 1, Op. 46, III. Anitra's Dance (1888)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Mutopia Project edition by Deborah Lowrey after Kunkel Brothers (1891), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=281",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/GriegE/O46/03-anitrasdance/03-anitrasdance-mids.zip",
+    "member": "anitrasdance.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "second violins",
+      "first violins",
+      "second violins",
+      "violas",
+      "cellos",
+      "basses",
+      "triangle"
+    ]
+  },
+  {
+    "id": "finale",
+    "position": 7,
+    "file": "finale-adrift.mp3",
+    "title": "Finale, Adrift",
+    "composer": "Pyotr Ilyich Tchaikovsky",
+    "work": "Violin Concerto in D major, Op. 35, III. Finale: Allegro vivacissimo (1878)",
+    "arrangement": "At 70% of the written tempo, the solo part on French horn.",
+    "edition": "Mutopia Project edition by Will Oram after Eulenburg (1920), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=466",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/TchaikovskyPI/O35/tchai_op35/tchai_op35-mids.zip",
+    "member": "tchai_op35-2.mid",
+    "slowdown": 0.7
+  },
+  {
+    "id": "american",
+    "position": 8,
+    "file": "american-adrift.mp3",
+    "title": "American, Adrift",
+    "composer": "Antonín Dvořák",
+    "work": "String Quartet No. 12 in F major \"American\", Op. 96, I. Allegro ma non troppo (1893)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Mutopia Project edition by Sébastien Manen after Simrock (1894), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=2211",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/DvorakA/O96/dvorak-o96/dvorak-o96-mids.zip",
+    "member": "dvorak-o96.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "second violins",
+      "violas",
+      "cellos"
+    ]
+  }
+]
