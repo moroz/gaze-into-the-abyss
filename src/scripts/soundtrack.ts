@@ -69,19 +69,20 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
     hintTimer = window.setTimeout(() => { hint.hidden = true }, HINT_FADE_MS)
   }
 
+  // iOS fires no click for a tap on something that does not look clickable, but its touchend still lets audio start.
+  const GESTURES = ["click", "touchend", "keydown"]
+
   const startOnGesture = (event: Event): void => {
-    if (toggle.contains(event.target as Node)) return
+    if (audible || toggle.contains(event.target as Node)) return
     play()
   }
 
   const waitForGesture = (): void => {
-    window.addEventListener("click", startOnGesture)
-    window.addEventListener("keydown", startOnGesture)
+    for (const gesture of GESTURES) window.addEventListener(gesture, startOnGesture)
   }
 
   const stopWaitingForGesture = (): void => {
-    window.removeEventListener("click", startOnGesture)
-    window.removeEventListener("keydown", startOnGesture)
+    for (const gesture of GESTURES) window.removeEventListener(gesture, startOnGesture)
   }
 
   const stop = (): void => {
@@ -151,6 +152,19 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
     fetch(prefetched).catch(() => {})
   }
 
+  // Phones keep a hidden page's audio playing, so the music would follow the visitor out of the browser.
+  let resumeOnReturn = false
+  const onVisibilityChange = (): void => {
+    if (document.hidden) {
+      resumeOnReturn = audible
+      if (audible) pause()
+    } else if (resumeOnReturn) {
+      resumeOnReturn = false
+      play()
+    }
+  }
+
+  document.addEventListener("visibilitychange", onVisibilityChange)
   audio.addEventListener("playing", onPlaying)
   audio.addEventListener("pause", onPause)
   audio.addEventListener("ended", next)
