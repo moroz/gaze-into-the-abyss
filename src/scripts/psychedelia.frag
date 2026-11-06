@@ -5,8 +5,7 @@ const float TAU = 6.2831853;
 const float SCENE_SECONDS = 40.0;
 const float BLEND_SECONDS = 8.0;
 const float SCENE_COUNT = 3.0;
-const vec2 SEAHORSE_VALLEY = vec2(-0.743643887037151, 0.131825904205330);
-const float MAX_ITERATIONS = 192.0;
+const float JULIA_ITERATIONS = 160.0;
 
 vec3 spectrum(float t) { return 0.5 + 0.5 * cos(TAU * (t + vec3(0.0, 0.33, 0.67))); }
 
@@ -46,33 +45,44 @@ vec3 liquidKaleidoscope(vec2 uv, float t) {
   return spectrum(field * 1.6 + length(q) + t * 0.025) * smoothstep(0.15, 0.85, field);
 }
 
-vec3 twistingTunnel(vec2 uv, float t) {
-  float radius = length(uv);
-  float angle = atan(uv.y, uv.x);
-  float depth = 0.3 / max(radius, 0.001) + t * 0.4;
-  float twist = angle + depth * 0.6 + 0.8 * sin(t * 0.1);
-  float tiles = sin(twist * 6.0) * sin(depth * 9.0);
-  float grain = fbm(vec2(cos(angle), sin(angle)) * 2.5 + vec2(depth * 0.7, t * 0.05));
-  vec3 colour = spectrum(depth * 0.09 + grain * 0.8 + t * 0.02);
-  return colour * pow(abs(tiles), 0.35) * (0.6 + 0.6 * grain) * smoothstep(0.03, 0.45, radius);
+vec2 complexSquare(vec2 z) { return vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y); }
+
+mat2 rotation(float angle) { return mat2(cos(angle), sin(angle), -sin(angle), cos(angle)); }
+
+vec3 juliaBloom(vec2 uv, float t) {
+  float orbit = t * 0.045;
+  vec2 cardioidEdge = 0.5 * vec2(cos(orbit), sin(orbit)) - 0.25 * vec2(cos(2.0 * orbit), sin(2.0 * orbit));
+  vec2 c = cardioidEdge * (1.0 + 0.035 * sin(t * 0.11));
+  vec2 z = rotation(t * 0.02) * uv * 2.4;
+  float ringTrap = 1e9;
+  float crossTrap = 1e9;
+  float escapedAt = -1.0;
+  for (float n = 0.0; n < JULIA_ITERATIONS; n++) {
+    z = complexSquare(z) + c;
+    ringTrap = min(ringTrap, abs(length(z) - 0.6));
+    crossTrap = min(crossTrap, min(abs(z.x), abs(z.y)));
+    if (dot(z, z) > 64.0) { escapedAt = n; break; }
+  }
+  vec3 veins = spectrum(ringTrap * 1.5 + t * 0.03) * exp(-ringTrap * 9.0) + spectrum(crossTrap + 0.5 - t * 0.02) * exp(-crossTrap * 14.0) * 0.7;
+  if (escapedAt < 0.0) return veins;
+  float smoothed = escapedAt - log2(log2(dot(z, z))) + 4.0;
+  vec3 halo = spectrum(smoothed * 0.035 + t * 0.02) * smoothstep(2.0, 40.0, smoothed);
+  return halo + veins * 0.6;
 }
 
-vec3 mandelbrotDive(vec2 uv, float sceneTime) {
-  float angle = sceneTime * 0.04;
-  uv = mat2(cos(angle), sin(angle), -sin(angle), cos(angle)) * uv;
-  float zoom = exp(0.17 * sceneTime);
-  vec2 c = SEAHORSE_VALLEY + uv * 3.0 / zoom;
-  vec2 z = vec2(0.0);
-  float escapedAt = -1.0;
-  for (float n = 0.0; n < MAX_ITERATIONS; n++) {
-    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
-    if (dot(z, z) > 256.0) { escapedAt = n; break; }
+vec3 kaliNebula(vec2 uv, float t) {
+  vec2 p = rotation(t * 0.015) * uv * (0.5 + 0.12 * sin(t * 0.04)) + 0.25 * vec2(sin(t * 0.021), cos(t * 0.017));
+  vec2 fold = vec2(0.53 + 0.04 * sin(t * 0.05), 0.71 + 0.04 * cos(t * 0.043));
+  vec3 colour = vec3(0.0);
+  float previous = 0.0;
+  for (int n = 0; n < 12; n++) {
+    p = abs(p) / dot(p, p) - fold;
+    float radius = length(p);
+    float filament = exp(-abs(radius - previous) * 8.0);
+    colour += spectrum(float(n) * 0.08 + radius * 0.05 + t * 0.015) * filament * filament;
+    previous = radius;
   }
-  if (escapedAt < 0.0) return vec3(0.0);
-  float smoothed = escapedAt - log2(log2(dot(z, z))) + 4.0;
-  float farFromSet = 2.0 + 3.0 * log2(zoom);
-  float nearness = clamp((smoothed - farFromSet) / (MAX_ITERATIONS - farFromSet), 0.0, 1.0);
-  return spectrum(smoothed * 0.015 - sceneTime * 0.05) * pow(nearness, 0.3);
+  return colour * 0.35;
 }
 
 float sceneTime(float scene) {
@@ -90,8 +100,8 @@ void main() {
   float weight = sceneWeight(0.0);
   if (weight > 0.0) colour += weight * liquidKaleidoscope(uv, time);
   weight = sceneWeight(1.0);
-  if (weight > 0.0) colour += weight * twistingTunnel(uv, time);
+  if (weight > 0.0) colour += weight * juliaBloom(uv, time);
   weight = sceneWeight(2.0);
-  if (weight > 0.0) colour += weight * mandelbrotDive(uv, sceneTime(2.0));
+  if (weight > 0.0) colour += weight * kaliNebula(uv, time);
   gl_FragColor = vec4(colour, 1.0);
 }
