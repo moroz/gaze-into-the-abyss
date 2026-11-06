@@ -7,7 +7,7 @@ const tracks = (await getCollection("music")).sort(byPosition)
 
 {tracks.map(({ data }, index) => <audio src={`/music/${data.file}`} preload={index === 0 ? "auto" : "none"} />)}
 
-<p class="hint" role="status" hidden>Click on the abyss and the abyss shall gaze unto you</p>
+<p class="hint" role="status" hidden>Click on the abyss and the abyss shall gaze unto thee</p>
 
 <button type="button" class="music-toggle" aria-label="Play music">
   <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
