@@ -2,10 +2,10 @@
 import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
 
-const tracks = (await getCollection("music")).sort(byPosition)
+const paths = (await getCollection("music")).sort(byPosition).map(({ data }) => `/music/${data.file}`)
 ---
 
-{tracks.map(({ data }, index) => <audio src={`/music/${data.file}`} preload={index === 0 ? "auto" : "none"} />)}
+<audio src={paths[0]} preload="auto" data-tracks={JSON.stringify(paths)}></audio>
 
 <p class="hint" role="status" hidden>Click on the abyss and the abyss shall gaze unto thee</p>
 
@@ -17,8 +17,10 @@ const tracks = (await getCollection("music")).sort(byPosition)
 <script>
   import { runSoundtrack } from "../scripts/soundtrack"
 
+  const audio = document.querySelector("audio")!
   runSoundtrack(
-    [...document.querySelectorAll("audio")],
+    audio,
+    JSON.parse(audio.dataset.tracks!),
     document.querySelector<HTMLButtonElement>(".music-toggle")!,
     document.querySelector<HTMLElement>(".hint")!,
   )

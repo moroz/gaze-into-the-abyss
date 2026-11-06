@@ -1,0 +1,20 @@
+<button type="button" class="fullscreen-toggle" aria-label="Full screen" hidden>
+  <svg class="icon-enter" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" /></svg>
+  <svg class="icon-exit" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" /></svg>
+</button>
+
+<script>
+  import { runFullscreenToggle } from "../scripts/fullscreen"
+
+  runFullscreenToggle(document.querySelector<HTMLButtonElement>(".fullscreen-toggle")!)
+</script>
+
+<style>
+  .fullscreen-toggle { position: absolute; right: 16px; bottom: 16px; z-index: 2; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: #ffffffcc; cursor: pointer; transition: opacity .6s; }
+  .fullscreen-toggle[hidden] { display: none; }
+  .fullscreen-toggle:hover { color: #ffffff; }
+  svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 4px #000000); }
+  .icon-exit, .fullscreen-toggle:global(.is-active) .icon-enter { display: none; }
+  .fullscreen-toggle:global(.is-active) .icon-exit { display: block; }
+  :global(.is-idle) .fullscreen-toggle:not(:focus-visible) { opacity: 0; }
+</style>
