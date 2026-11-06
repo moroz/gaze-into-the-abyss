@@ -24,9 +24,11 @@ ROOT = Path(__file__).resolve().parent.parent
 MUSIC = ROOT / "public/music"
 PLAYLIST = ROOT / "src/data/music.json"
 RATE = 44100
-REVERB_SECONDS = 7.0
+REVERB_SECONDS = 11.0
 SILENCE_DB = -70
 FADE_OUT_SECONDS = 8.0
+# How hard the dry band is driven into tanh saturation before the reverb.
+DRIVE = 3.0
 # Wikimedia refuses downloads that do not say who is asking.
 USER_AGENT = "gaze-into-the-abyss soundtrack renderer (https://github.com/moroz/gaze-into-the-abyss)"
 
@@ -202,6 +204,10 @@ def impulse_response() -> np.ndarray:
     return response / np.abs(response).max() * 0.98
 
 
+def saturate(samples: np.ndarray) -> np.ndarray:
+    return np.tanh(samples / np.abs(samples).max() * DRIVE) / np.tanh(DRIVE)
+
+
 def finish(samples: np.ndarray, music_seconds: float, cut_short: bool) -> np.ndarray:
     loudness = np.sqrt((samples ** 2).mean(axis=1))
     audible_end = np.nonzero(loudness > 10 ** (SILENCE_DB / 20))[0][-1] + 1
@@ -226,10 +232,11 @@ def render(piece: Piece, work: Path) -> None:
                     "-o", "synth.reverb.width=1.0", "-o", "synth.reverb.level=0.9",
                     "-o", "synth.chorus.depth=8", "-F", str(work / "dry.wav"), SOUNDFONT,
                     str(work / "recast.mid")], check=True)
+    write_wav(work / "dry.wav", saturate(read_wav(work / "dry.wav")))
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "dry.wav"),
                     "-i", str(work / "ir.wav"), "-filter_complex",
-                    "[0:a]asplit[dry][send];[send][1:a]afir=dry=10:wet=10[wet];[dry]volume=0.55[quiet];"
-                    "[quiet][wet]amix=inputs=2:weights='1 0.6':normalize=0,apad=pad_dur=8[out]",
+                    "[0:a]asplit[dry][send];[send][1:a]afir=dry=10:wet=10[wet];[dry]volume=0.4[quiet];"
+                    "[quiet][wet]amix=inputs=2:weights='1 1.0':normalize=0,apad=pad_dur=12[out]",
                     "-map", "[out]", str(work / "wet.wav")], check=True)
     finished = finish(read_wav(work / "wet.wav"), midi.length, cut_short=piece.last_bar is not None)
     write_wav(work / "finished.wav", finished)
