@@ -104,14 +104,14 @@ In `src/components/Trip.astro`: `.trip` has `opacity: .5`, and `@keyframes breat
 ## Rendering
 
 ```bash
-python3 script/render_soundtrack.py
+uv run script/render_soundtrack.py
 ```
 
 It needs:
 - FluidSynth and the FluidR3 GM soundfont (Debian/Ubuntu: `fluid-soundfont-gm`; macOS: `brew install
   fluid-synth` and download `FluidR3_GM.sf2`, then point `SOUNDFONT` at it)
 - ffmpeg with libmp3lame
-- Python with `mido` and `numpy`
+- uv, which installs `mido` and `numpy` from the script's inline metadata
 
 It renders every track in `src/data/music.json`, which takes about a minute per 10 minutes of music.
 Output is deterministic: the reverb's noise is seeded, so an unchanged track comes out byte-identical,

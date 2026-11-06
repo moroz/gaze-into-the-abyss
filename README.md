@@ -28,9 +28,9 @@ Use public-domain sources only, the MIDI edition as well as the composition, so 
 line. Add or change an entry in `src/data/music.json`, then render:
 
 ```bash
-python3 script/render_soundtrack.py
+uv run script/render_soundtrack.py
 ```
 
 It needs FluidSynth, the FluidR3 GM soundfont (Debian: `fluid-soundfont-gm`), ffmpeg with libmp3lame, and
-the Python packages `mido` and `numpy`. The band, the detuning and the reverb live in the script, and every
+uv, which installs the Python packages from the script's inline metadata. The band, the detuning and the reverb live in the script, and every
 track uses the same ones. Edit the script and render again rather than editing the MP3s.

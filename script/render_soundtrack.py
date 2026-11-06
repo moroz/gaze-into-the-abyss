@@ -1,6 +1,10 @@
-#!/usr/bin/env python3
-# Needs fluidsynth, the FluidR3 GM soundfont (Debian: fluid-soundfont-gm), ffmpeg with libmp3lame,
-# and the Python packages mido and numpy.
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["mido", "numpy"]
+# ///
+# Needs fluidsynth, the FluidR3 GM soundfont (Debian: fluid-soundfont-gm) and ffmpeg with libmp3lame;
+# uv supplies the Python packages.
 import io
 import json
 import subprocess
@@ -23,6 +27,8 @@ RATE = 44100
 REVERB_SECONDS = 7.0
 SILENCE_DB = -70
 FADE_OUT_SECONDS = 8.0
+# Wikimedia refuses downloads that do not say who is asking.
+USER_AGENT = "gaze-into-the-abyss soundtrack renderer (https://github.com/moroz/gaze-into-the-abyss)"
 
 GENERAL_MIDI = {
     "celesta": 8, "vibraphone": 11, "church organ": 19, "harp": 46, "french horn": 60,
@@ -53,6 +59,7 @@ BAND = {
     "cellos": Voice("bowed glass pad", 0, 0.75),
     "basses": Voice("warm pad", 0, 0.7),
     "triangle": Voice("tinkle bell", 0, 0.6),
+    "percussion": Voice(None, 0, 0.5),
 }
 
 PART_NAMES = {
@@ -101,6 +108,8 @@ def part_named(track_name: str) -> str:
 
 
 def recast(source: mido.MidiFile, piece: Piece) -> mido.MidiFile:
+    if source.type == 0:
+        source = split_channels(source)
     for track, part in zip(source.tracks, part_names(source, piece)):
         if piece.last_bar:
             end_at_bar(track, piece.last_bar * 4 * source.ticks_per_beat)
@@ -112,14 +121,40 @@ def recast(source: mido.MidiFile, piece: Piece) -> mido.MidiFile:
             if message.type == "set_tempo":
                 message = message.copy(tempo=int(message.tempo / piece.slowdown))
             elif message.type == "program_change" and voice.instrument:
-                messages.append(message.copy(program=GENERAL_MIDI[voice.instrument]))
-                bend = int(8192 * voice.detune_cents / 200)
-                message = mido.Message("pitchwheel", channel=message.channel, pitch=bend)
+                messages += voicing(voice, message.channel, message.time)
+                continue
             elif message.type == "note_on" and message.velocity:
                 message = message.copy(velocity=max(1, int(message.velocity * voice.velocity_scale)))
             messages.append(message)
+        channels = [message.channel for message in track if message.type == "note_on"]
+        if voice.instrument and channels and not any(message.type == "program_change" for message in track):
+            messages[:0] = voicing(voice, channels[0])
         track[:] = messages
     return source
+
+
+def voicing(voice: Voice, channel: int, time: int = 0) -> list[mido.Message]:
+    return [mido.Message("program_change", channel=channel, program=GENERAL_MIDI[voice.instrument], time=time),
+            mido.Message("pitchwheel", channel=channel, pitch=int(8192 * voice.detune_cents / 200))]
+
+
+def split_channels(source: mido.MidiFile) -> mido.MidiFile:
+    """A type 0 file holds every part in one track; give each channel its own, as in a type 1 file."""
+    events: dict[int | None, list[tuple[int, mido.Message]]] = {}
+    tick = 0
+    for message in source.tracks[0]:
+        tick += message.time
+        if message.type != "end_of_track":
+            events.setdefault(getattr(message, "channel", None), []).append((tick, message))
+    split = mido.MidiFile(type=1, ticks_per_beat=source.ticks_per_beat)
+    for channel in [None] + sorted(key for key in events if key is not None):
+        track, previous = mido.MidiTrack(), 0
+        for tick, message in events.get(channel, []):
+            track.append(message.copy(time=tick - previous))
+            previous = tick
+        track.append(mido.MetaMessage("end_of_track"))
+        split.tracks.append(track)
+    return split
 
 
 def end_at_bar(track: mido.MidiTrack, end_tick: int) -> None:
@@ -179,7 +214,8 @@ def finish(samples: np.ndarray, music_seconds: float, cut_short: bool) -> np.nda
 
 
 def render(piece: Piece, work: Path) -> None:
-    with urllib.request.urlopen(piece.source) as response:
+    request = urllib.request.Request(piece.source, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request) as response:
         download = response.read()
     if piece.source.endswith(".zip"):
         download = zipfile.ZipFile(io.BytesIO(download)).read(piece.member)
