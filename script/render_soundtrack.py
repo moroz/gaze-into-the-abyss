@@ -29,6 +29,9 @@ SILENCE_DB = -70
 FADE_OUT_SECONDS = 8.0
 # How hard the dry orchestra is driven into tanh saturation before the reverb.
 DRIVE = 3.0
+# The reverb mix peaks over twice full scale; it is turned down before it is written as 16-bit samples and
+# brought back up by finish().
+MIX_HEADROOM = 0.25
 # Wikimedia refuses downloads that do not say who is asking.
 USER_AGENT = "gaze-into-the-abyss soundtrack renderer (https://github.com/moroz/gaze-into-the-abyss)"
 
@@ -167,9 +170,12 @@ def render(piece: Piece, work: Path) -> None:
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "dry.wav"),
                     "-i", str(work / "ir.wav"), "-filter_complex",
                     "[0:a]asplit[dry][send];[send][1:a]afir=dry=10:wet=10[wet];[dry]volume=0.4[quiet];"
-                    "[quiet][wet]amix=inputs=2:weights='1 1.0':normalize=0,apad=pad_dur=12[out]",
+                    f"[quiet][wet]amix=inputs=2:weights='1 1.0':normalize=0,volume={MIX_HEADROOM},apad=pad_dur=12[out]",
                     "-map", "[out]", str(work / "wet.wav")], check=True)
-    finished = finish(read_wav(work / "wet.wav"), midi.length, cut_short=piece.last_bar is not None)
+    wet = read_wav(work / "wet.wav")
+    if np.abs(wet).max() >= 32766 / 32767:
+        raise SystemExit(f"{piece.output}: the reverb mix clips; lower MIX_HEADROOM")
+    finished = finish(wet, midi.length, cut_short=piece.last_bar is not None)
     write_wav(work / "finished.wav", finished)
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "finished.wav"),
                     "-af", "loudnorm=I=-20:TP=-2:LRA=14", "-ar", str(RATE), "-c:a", "libmp3lame",
