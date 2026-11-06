@@ -2,17 +2,23 @@
 import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
 
-const paths = (await getCollection("music")).sort(byPosition).map(({ data }) => `/music/${data.file}`)
+const tracks = (await getCollection("music")).sort(byPosition)
+const paths = tracks.map(({ data }) => `/music/${data.file}`)
+const credits = Object.fromEntries(tracks.map(({ data }) =>
+  [`/music/${data.file}`, { title: data.title, composer: data.composer, work: data.work, edition: data.edition, editionUrl: data.editionUrl }]))
 ---
 
-<audio preload="auto" data-tracks={JSON.stringify(paths)}></audio>
+<audio preload="auto" data-tracks={JSON.stringify(paths)} data-credits={JSON.stringify(credits)}></audio>
 
 <p class="hint" role="status" hidden>Touch the abyss and the abyss gazeth upon thee</p>
 
-<button type="button" class="music-toggle" aria-label="Play music">
-  <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
-  <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11a.75.75 0 0 0 1.14.64l9-5.5a.75.75 0 0 0 0-1.28l-9-5.5A.75.75 0 0 0 4 2.5Z" /></svg>
-</button>
+<div class="music">
+  <button type="button" class="music-toggle" aria-label="Play music">
+    <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
+    <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11a.75.75 0 0 0 1.14.64l9-5.5a.75.75 0 0 0 0-1.28l-9-5.5A.75.75 0 0 0 4 2.5Z" /></svg>
+  </button>
+  <p class="now-playing"><strong class="now-title"></strong> <span class="now-work"></span> <a class="now-edition" target="_blank" rel="noopener"></a></p>
+</div>
 
 <script>
   import { runSoundtrack } from "../scripts/soundtrack"
@@ -24,16 +30,33 @@ const paths = (await getCollection("music")).sort(byPosition).map(({ data }) => 
     document.querySelector<HTMLButtonElement>(".music-toggle")!,
     document.querySelector<HTMLElement>(".hint")!,
   )
+
+  const credits = JSON.parse(audio.dataset.credits!)
+  const edition = document.querySelector<HTMLAnchorElement>(".now-edition")!
+  audio.addEventListener("loadstart", () => {
+    const credit = credits[new URL(audio.src).pathname]
+    if (!credit) return
+    document.querySelector(".now-title")!.textContent = credit.title
+    document.querySelector(".now-work")!.textContent = `${credit.composer}, ${credit.work}.`
+    edition.textContent = credit.edition
+    edition.href = credit.editionUrl
+  })
 </script>
 
 <style>
   .hint { position: absolute; left: 50%; top: 50%; z-index: 3; box-sizing: border-box; width: max-content; max-width: calc(100% - 64px); margin: 0; padding: 12px 22px; translate: -50% -50%; border-radius: 24px; background: #000000a6; font-size: 14px; font-weight: 600; line-height: 1.4; letter-spacing: .12em; text-align: center; text-transform: uppercase; text-shadow: 0 0 10px #5ee6ff88; pointer-events: none; opacity: 0; transition: opacity .8s; }
   .hint:global(.is-showing) { opacity: 1; }
 
-  .music-toggle { position: absolute; left: 16px; bottom: 16px; z-index: 2; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: #ffffffcc; cursor: pointer; transition: opacity .6s; }
+  .music { position: absolute; left: 16px; bottom: 16px; z-index: 2; display: flex; align-items: flex-end; gap: 4px; max-width: calc(100% - 92px); }
+  .music-toggle { flex: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: #ffffffcc; cursor: pointer; transition: opacity .6s; }
   .music-toggle:hover { color: #ffffff; }
   svg { width: 18px; height: 18px; fill: currentColor; filter: drop-shadow(0 1px 4px #000000); }
   .icon-pause, .music-toggle:global(.is-playing) .icon-play { display: none; }
   .music-toggle:global(.is-playing) .icon-pause { display: block; }
   :global(.is-idle) .music-toggle:not(:focus-visible) { opacity: 0; }
+
+  .now-playing { margin: 0 0 6px; padding: 8px 14px; border-radius: 14px; background: #000000b3; color: #ffffffd9; font-size: 12px; line-height: 1.45; opacity: 0; pointer-events: none; transition: opacity .4s; }
+  .now-title { color: #ffffff; font-weight: 600; letter-spacing: .04em; }
+  .now-edition { display: block; color: #9fe9ff; }
+  .music:hover .now-playing, .music:focus-within .now-playing { opacity: 1; pointer-events: auto; }
 </style>

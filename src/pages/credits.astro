@@ -29,8 +29,8 @@ const tracks = (await getCollection("music")).sort(byPosition)
 
     <h2>Music</h2>
     <p>
-      Rendered from public-domain MIDI editions, every track by the same band of General MIDI instruments with a few
-      parts detuned and a long reverb, using FluidSynth and the FluidR3 GM soundfont by Frank Wen (MIT licence).
+      Rendered from the MIDI editions below on the orchestral instruments they name, slowed, saturated and given a long
+      reverb, using FluidSynth and the FluidR3 GM soundfont by Frank Wen (MIT licence).
     </p>
     <ul class="tracks">
       {tracks.map(({ data }) => (

@@ -27,8 +27,8 @@ const music = defineCollection({
     sourceZip: z.url().optional(),
     midi: z.url().optional(),
     member: z.string(),
-    parts: z.array(z.string()).optional(),
     slowdown: z.number().positive().max(1),
+    firstBar: z.number().int().positive().optional(),
     lastBar: z.number().int().positive().optional(),
   }).refine((track) => Boolean(track.sourceZip) !== Boolean(track.midi), "Give either sourceZip or midi"),
 })
