@@ -27,5 +27,255 @@
     "member": "tchai_op35.mid",
     "slowdown": 0.6,
     "lastBar": 160
+  },
+  {
+    "id": "internationale",
+    "position": 3,
+    "file": "internationale-adrift.mp3",
+    "title": "Internationale, Adrift",
+    "composer": "Pierre De Geyter",
+    "work": "L'Internationale (1888), orchestral arrangement",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Orchestral arrangement by Jerry Engelbach (2003), released into the public domain on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Internationale_orch2.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Internationale_orch2.mid",
+    "member": "Internationale_orch2.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "flute",
+      "flute",
+      "oboe",
+      "clarinet",
+      "bassoon",
+      "first horn",
+      "trumpet",
+      "second horn",
+      "basses",
+      "percussion",
+      "timpani",
+      "first violins",
+      "second violins",
+      "violas",
+      "cellos",
+      "basses"
+    ]
+  },
+  {
+    "id": "invention-15",
+    "position": 4,
+    "file": "invention-adrift.mp3",
+    "title": "B Minor, Adrift",
+    "composer": "Johann Sebastian Bach",
+    "work": "Invention No. 15 in B minor, BWV 786 (1723)",
+    "arrangement": "At 60% of the written tempo, the upper voice on celesta and the lower on harp.",
+    "edition": "Mutopia Project edition by Allen Garvin after the Bach-Gesellschaft, public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=68",
+    "midi": "https://www.mutopiaproject.org/ftp/BachJS/BWV786/bach-invention-15/bach-invention-15.mid",
+    "member": "bach-invention-15.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "violas"
+    ]
+  },
+  {
+    "id": "marseillaise",
+    "position": 5,
+    "file": "marseillaise-adrift.mp3",
+    "title": "Marseillaise, Adrift",
+    "composer": "Claude Joseph Rouget de Lisle",
+    "work": "La Marseillaise (1792)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Allons%2C_enfants_de_la_patrie.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/6/60/Allons%2C_enfants_de_la_patrie.mid",
+    "member": "Allons,_enfants_de_la_patrie.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "clarinet",
+      "cellos",
+      "violas"
+    ]
+  },
+  {
+    "id": "volga-boatmen",
+    "position": 6,
+    "file": "volga-boatmen-adrift.mp3",
+    "title": "Boatmen, Adrift",
+    "composer": "Traditional, Russia",
+    "work": "Song of the Volga Boatmen (Ej, uchnem!), as collected by Mily Balakirev (1866)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Ej%2C_uchnem%21.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Ej%2C_uchnem%21.mid",
+    "member": "Ej,_uchnem!.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "clarinet",
+      "first violins",
+      "solo",
+      "cellos"
+    ]
+  },
+  {
+    "id": "kolokolchik",
+    "position": 7,
+    "file": "kolokolchik-adrift.mp3",
+    "title": "Little Bell, Adrift",
+    "composer": "Traditional, Russia",
+    "work": "Odnozvuchno gremit kolokolchik (The Little Bell Rings Monotonously)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Kolokolchik.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Kolokolchik.mid",
+    "member": "Kolokolchik.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "second violins",
+      "solo",
+      "first horn",
+      "cellos"
+    ]
+  },
+  {
+    "id": "dark-eyes",
+    "position": 8,
+    "file": "dark-eyes-adrift.mp3",
+    "title": "Dark Eyes, Adrift",
+    "composer": "Traditional, Russia",
+    "work": "Ochi chyornye (Dark Eyes)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Schwarze_Augen.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Schwarze_Augen.mid",
+    "member": "Schwarze_Augen.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "clarinet",
+      "solo",
+      "violas"
+    ]
+  },
+  {
+    "id": "bublichki",
+    "position": 9,
+    "file": "bublichki-adrift.mp3",
+    "title": "Bublichki, Adrift",
+    "composer": "Traditional, Russia",
+    "work": "Bublichki (1920s)",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Bublitschki.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/0/0e/Bublitschki.mid",
+    "member": "Bublitschki.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "clarinet",
+      "violas",
+      "second violins",
+      "cellos"
+    ]
+  },
+  {
+    "id": "sidi-mara",
+    "position": 10,
+    "file": "sidi-mara-adrift.mp3",
+    "title": "Sidi Mara, Adrift",
+    "composer": "Traditional, Croatia",
+    "work": "Sidi Mara",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Sidi_Mara.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/5/54/Sidi_Mara.mid",
+    "member": "Sidi_Mara.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "solo",
+      "second violins",
+      "cellos"
+    ]
+  },
+  {
+    "id": "jelena",
+    "position": 11,
+    "file": "jelena-adrift.mp3",
+    "title": "Jelena, Adrift",
+    "composer": "Traditional, Croatia",
+    "work": "Oj, Jelena, Jelena",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Oj%2C_Jelena%2C_Jelena.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Oj%2C_Jelena%2C_Jelena.mid",
+    "member": "Oj,_Jelena,_Jelena.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "violas",
+      "second violins",
+      "cellos"
+    ]
+  },
+  {
+    "id": "marjane",
+    "position": 12,
+    "file": "marjane-adrift.mp3",
+    "title": "Marjane, Adrift",
+    "composer": "Traditional, Croatia",
+    "work": "Marjane, Marjane",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Marjane%2C_Marjane.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Marjane%2C_Marjane.mid",
+    "member": "Marjane,_Marjane.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "clarinet",
+      "solo",
+      "first violins",
+      "basses"
+    ]
+  },
+  {
+    "id": "velebita",
+    "position": 13,
+    "file": "velebita-adrift.mp3",
+    "title": "Velebit, Adrift",
+    "composer": "Traditional, Croatia",
+    "work": "Oj ti vilo Velebita",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Oj_ti_vilo_Velebita.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Oj_ti_vilo_Velebita.mid",
+    "member": "Oj_ti_vilo_Velebita.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "first violins",
+      "clarinet",
+      "violas",
+      "second violins"
+    ]
+  },
+  {
+    "id": "ajde-jano",
+    "position": 14,
+    "file": "ajde-jano-adrift.mp3",
+    "title": "Jana, Adrift",
+    "composer": "Traditional, Serbia",
+    "work": "Ajde Jano",
+    "arrangement": "At 60% of the written tempo.",
+    "edition": "Four-part setting by Peter Gerloff (Rabanus Flavus), released under CC0 on Wikimedia Commons",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Ajde_Jano.mid",
+    "midi": "https://upload.wikimedia.org/wikipedia/commons/9/92/Ajde_Jano.mid",
+    "member": "Ajde_Jano.mid",
+    "slowdown": 0.6,
+    "parts": [
+      "violas",
+      "first violins",
+      "clarinet",
+      "second violins"
+    ]
   }
 ]
