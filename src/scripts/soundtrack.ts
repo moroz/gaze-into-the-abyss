@@ -152,19 +152,6 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
     fetch(prefetched).catch(() => {})
   }
 
-  // Phones keep a hidden page's audio playing, so the music would follow the visitor out of the browser.
-  let resumeOnReturn = false
-  const onVisibilityChange = (): void => {
-    if (document.hidden) {
-      resumeOnReturn = audible
-      if (audible) pause()
-    } else if (resumeOnReturn) {
-      resumeOnReturn = false
-      play()
-    }
-  }
-
-  document.addEventListener("visibilitychange", onVisibilityChange)
   audio.addEventListener("playing", onPlaying)
   audio.addEventListener("pause", onPause)
   audio.addEventListener("ended", next)
