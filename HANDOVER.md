@@ -18,7 +18,7 @@ State on 2026-11-06, written to continue on a machine with full internet access.
   - `handover/candidate-pieces.json`: six extra pieces I checked and mapped (below). None of them is in
     `src/data/music.json`; copy in the ones you pick.
 
-`astro check` reports 0 errors, warnings and hints, and `npm run build` passes on this branch. Rerendering
+`astro check` reports 0 errors, warnings and hints, and `pnpm build` passes on this branch. Rerendering
 reproduces the two committed MP3s byte for byte.
 
 ## To do
@@ -120,10 +120,10 @@ and `git status` shows only the tracks you actually changed.
 ## Checking the site
 
 ```bash
-npm install
-npx astro check
-npm run build
-npx astro preview
+pnpm install
+pnpm exec astro check
+pnpm build
+pnpm exec astro preview
 ```
 
 What I verified in headless Chromium, and what to retest after changes, especially on the iPad:
@@ -143,5 +143,5 @@ What I verified in headless Chromium, and what to retest after changes, especial
 - `getCollection` doesn't keep the JSON's order; everything sorts by `position` (`src/scripts/by-position.ts`).
 - Astro caches content collections in `.astro/`. If a data change seems ignored, `rm -rf .astro` and rebuild.
 - Image `sizes` is `118vw` because the slow drift zooms images up to 1.18×.
-- Pin npm versions exactly, to releases at least two weeks old (Astro is on 7.4.2 for that reason).
-- Netlify: build `npm run build`, publish `dist`, `NODE_VERSION` ≥ 22.23.4 (Astro 7's minimum).
+- Pin package versions exactly, to releases at least two weeks old (Astro is on 7.4.2 for that reason).
+- Netlify: `netlify.toml` builds with `pnpm run build` and publishes `dist`; `NODE_VERSION` ≥ 22.23.4 (Astro 7's minimum).

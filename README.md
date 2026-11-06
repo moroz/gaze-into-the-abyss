@@ -1,11 +1,11 @@
 # Gaze into the Abyss
 
 Cosmic imagery, psychedelic shaders and slowed-down Romantic music, full screen. An Astro site with no
-server: `npm run build` writes a static site to `dist/`.
+server: `pnpm build` writes a static site to `dist/`.
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ## What it is made of
