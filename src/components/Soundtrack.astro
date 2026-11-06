@@ -4,11 +4,12 @@ import { byPosition } from "../scripts/by-position"
 
 const tracks = (await getCollection("music")).sort(byPosition)
 const paths = tracks.map(({ data }) => `/music/${data.file}`)
+const ids = Object.fromEntries(tracks.map(({ id, data }) => [id, `/music/${data.file}`]))
 const credits = Object.fromEntries(tracks.map(({ data }) =>
   [`/music/${data.file}`, { title: data.title, composer: data.composer, work: data.work, edition: data.edition, editionUrl: data.editionUrl }]))
 ---
 
-<audio preload="auto" data-tracks={JSON.stringify(paths)} data-credits={JSON.stringify(credits)}></audio>
+<audio preload="auto" data-tracks={JSON.stringify(paths)} data-credits={JSON.stringify(credits)} data-ids={JSON.stringify(ids)}></audio>
 
 <p class="hint" role="status" hidden>Touch the abyss and the abyss gazeth upon thee</p>
 
@@ -24,11 +25,14 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
   import { runSoundtrack } from "../scripts/soundtrack"
 
   const audio = document.querySelector("audio")!
+  // #track=<id from music.json> plays that track first; the shuffle carries on after it.
+  const chosen = JSON.parse(audio.dataset.ids!)[new URLSearchParams(location.hash.slice(1)).get("track") ?? ""]
   runSoundtrack(
     audio,
     JSON.parse(audio.dataset.tracks!),
     document.querySelector<HTMLButtonElement>(".music-toggle")!,
     document.querySelector<HTMLElement>(".hint")!,
+    chosen,
   )
 
   const credits = JSON.parse(audio.dataset.credits!)

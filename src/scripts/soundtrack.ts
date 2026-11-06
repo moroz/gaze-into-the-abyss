@@ -14,7 +14,7 @@ function shuffled<T>(items: T[]): T[] {
   return copy
 }
 
-export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle: HTMLButtonElement, hint: HTMLElement): void {
+export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle: HTMLButtonElement, hint: HTMLElement, first?: string): void {
   let current = ""
   let queue: string[] = []
   let prefetched = ""
@@ -23,6 +23,7 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
   let fadeFrame = 0
   let hintTimer = 0
   let blockedCheck = 0
+  let failures = 0
 
   // Every pass plays each track once in a fresh order, and a new pass never opens with the track that closed the last.
   const upcoming = (): string => {
@@ -36,6 +37,12 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
   const advance = (): void => {
     current = upcoming()
     queue.shift()
+    audio.src = current
+  }
+
+  const begin = (): void => {
+    if (!first) return advance()
+    current = first
     audio.src = current
   }
 
@@ -126,6 +133,7 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
 
   const onPlaying = (): void => {
     clearTimeout(blockedCheck)
+    failures = 0
     if (audible) return
     audible = true
     render()
@@ -146,6 +154,14 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
     else render()
   }
 
+  // A track that will not load would otherwise fail every play() as if autoplay were blocked, ignoring every click.
+  const skipBroken = (): void => {
+    failures += 1
+    if (failures >= tracks.length) return
+    advance()
+    play()
+  }
+
   const prefetchNext = (): void => {
     if (prefetched === upcoming() || audio.duration - audio.currentTime > PRELOAD_NEXT_SECONDS) return
     prefetched = upcoming()
@@ -155,9 +171,10 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
   audio.addEventListener("playing", onPlaying)
   audio.addEventListener("pause", onPause)
   audio.addEventListener("ended", next)
+  audio.addEventListener("error", skipBroken)
   audio.addEventListener("timeupdate", prefetchNext)
   toggle.addEventListener("click", () => (audible ? pause() : play()))
-  advance()
+  begin()
   render()
   play()
 }
