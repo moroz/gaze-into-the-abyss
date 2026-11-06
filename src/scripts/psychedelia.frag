@@ -4,11 +4,9 @@ uniform float time;
 const float TAU = 6.2831853;
 const float SCENE_SECONDS = 40.0;
 const float BLEND_SECONDS = 8.0;
+// Exposure for the overlay: lifts the faint filaments a lot and the already bright scenes only a little.
+const float EXPOSURE = 2.4;
 const float SCENE_COUNT = 3.0;
-const vec2 SEAHORSE_VALLEY = vec2(-0.743643887037151, 0.131825904205330);
-const float MANDELBROT_ITERATIONS = 192.0;
-// Close enough to Seahorse Valley that only the boundary shows, never the whole set.
-const float MANDELBROT_START_ZOOM = 30.0;
 
 vec3 spectrum(float t) { return 0.5 + 0.5 * cos(TAU * (t + vec3(0.0, 0.33, 0.67))); }
 
@@ -48,40 +46,38 @@ vec3 liquidKaleidoscope(vec2 uv, float t) {
   return spectrum(field * 1.6 + length(q) + t * 0.025) * smoothstep(0.15, 0.85, field);
 }
 
-vec2 complexSquare(vec2 z) { return vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y); }
 
 mat2 rotation(float angle) { return mat2(cos(angle), sin(angle), -sin(angle), cos(angle)); }
 
 vec3 kaliNebula(vec2 uv, float t) {
-  vec2 p = rotation(t * 0.015) * uv * (0.5 + 0.12 * sin(t * 0.04)) + 0.25 * vec2(sin(t * 0.021), cos(t * 0.017));
-  vec2 fold = vec2(0.53 + 0.04 * sin(t * 0.05), 0.71 + 0.04 * cos(t * 0.043));
+  vec2 p = rotation(t * 0.04) * uv * (0.5 + 0.18 * sin(t * 0.07)) + 0.4 * vec2(sin(t * 0.05), cos(t * 0.037));
+  vec2 fold = vec2(0.53 + 0.09 * sin(t * 0.11), 0.71 + 0.09 * cos(t * 0.083));
   vec3 colour = vec3(0.0);
   float previous = 0.0;
   for (int n = 0; n < 12; n++) {
     p = abs(p) / dot(p, p) - fold;
     float radius = length(p);
     float filament = exp(-abs(radius - previous) * 8.0);
-    colour += spectrum(float(n) * 0.08 + radius * 0.05 + t * 0.015) * filament * filament;
+    float pulse = 0.55 + 0.45 * sin(float(n) * 0.9 - t * 0.7);
+    colour += spectrum(float(n) * 0.08 + radius * 0.05 + t * 0.04) * filament * filament * pulse;
     previous = radius;
   }
-  return colour * 0.35;
+  return colour * 0.68;
 }
 
-vec3 mandelbrotDive(vec2 uv, float sceneTime) {
-  uv = rotation(sceneTime * 0.04) * uv;
-  float zoom = MANDELBROT_START_ZOOM * exp(0.09 * sceneTime);
-  vec2 c = SEAHORSE_VALLEY + uv * 3.0 / zoom;
-  vec2 z = vec2(0.0);
-  float escapedAt = -1.0;
-  for (float n = 0.0; n < MANDELBROT_ITERATIONS; n++) {
-    z = complexSquare(z) + c;
-    if (dot(z, z) > 256.0) { escapedAt = n; break; }
+// Three mirrors at 60 degrees, as in a toy kaleidoscope: the pattern tiles the screen instead of meeting in the middle.
+vec3 mirrorLattice(vec2 uv, float t) {
+  vec2 p = rotation(t * 0.012) * uv * (1.4 + 0.25 * sin(t * 0.031)) + vec2(t * 0.013, t * 0.007);
+  for (int i = 0; i < 3; i++) {
+    vec2 mirror = vec2(cos(float(i) * TAU / 3.0), sin(float(i) * TAU / 3.0));
+    float across = dot(p, mirror);
+    p += mirror * (abs(mod(across + 0.5, 1.0) - 0.5) - across);
   }
-  if (escapedAt < 0.0) return vec3(0.0);
-  float smoothed = escapedAt - log2(log2(dot(z, z))) + 4.0;
-  float farFromSet = 2.0 + 3.0 * log2(zoom);
-  float nearness = clamp((smoothed - farFromSet) / (MANDELBROT_ITERATIONS - farFromSet), 0.0, 1.0);
-  return spectrum(smoothed * 0.015 - sceneTime * 0.05) * pow(nearness, 0.3);
+  p *= 2.5;
+  vec2 q = vec2(fbm(p - t * 0.07), fbm(p + vec2(3.1, 7.4) + t * 0.05));
+  vec2 warp = vec2(fbm(p + 3.5 * q + vec2(6.2, 1.9) - t * 0.09), fbm(p + 3.5 * q + vec2(2.4, 8.8)));
+  float field = fbm(p + 3.5 * warp);
+  return spectrum(field * 1.3 - length(warp) + t * 0.02 + 0.4) * smoothstep(0.2, 0.8, field);
 }
 
 float sceneTime(float scene) {
@@ -101,6 +97,6 @@ void main() {
   weight = sceneWeight(1.0);
   if (weight > 0.0) colour += weight * kaliNebula(uv, time);
   weight = sceneWeight(2.0);
-  if (weight > 0.0) colour += weight * mandelbrotDive(uv, sceneTime(2.0));
-  gl_FragColor = vec4(colour, 1.0);
+  if (weight > 0.0) colour += weight * mirrorLattice(uv, time);
+  gl_FragColor = vec4(1.0 - exp(-EXPOSURE * colour), 1.0);
 }

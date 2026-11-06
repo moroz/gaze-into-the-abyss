@@ -13,7 +13,7 @@ npm run dev
 - **Imagery**: public-domain NASA images in `src/assets/cosmos`, listed with their credits in
   `src/data/cosmos.json`. Astro builds a responsive set of sizes for each one.
 - **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, cross-fading between a liquid
-  kaleidoscope, a Kali-set nebula and a dive along the edge of the Mandelbrot set over the imagery.
+  kaleidoscope, a Kali-set nebula and a three-mirror kaleidoscope that tiles the screen, over the imagery.
 - **Music**: `public/music`, rendered from public-domain MIDI editions listed in `src/data/music.json`.
 - **Credits**: `/credits`, generated from both data files.
 
