@@ -5,16 +5,39 @@ const HINT_MS = 6000
 const HINT_FADE_MS = 800
 const BLOCKED_CHECK_MS = 2000
 
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
 export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle: HTMLButtonElement, hint: HTMLElement): void {
-  let track = 0
-  let prefetched = -1
+  let current = ""
+  let queue: string[] = []
+  let prefetched = ""
   let audible = false
   let attempt = 0
   let fadeFrame = 0
   let hintTimer = 0
   let blockedCheck = 0
 
-  const upcoming = (): number => (track + 1) % tracks.length
+  // Every pass plays each track once in a fresh order, and a new pass never opens with the track that closed the last.
+  const upcoming = (): string => {
+    if (queue.length === 0) {
+      queue = shuffled(tracks)
+      if (queue.length > 1 && queue[0] === current) [queue[0], queue[1]] = [queue[1], queue[0]]
+    }
+    return queue[0]
+  }
+
+  const advance = (): void => {
+    current = upcoming()
+    queue.shift()
+    audio.src = current
+  }
 
   const render = (): void => {
     toggle.setAttribute("aria-label", audible ? "Pause music" : "Play music")
@@ -116,8 +139,7 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
 
   const next = (): void => {
     const continuing = audible
-    track = upcoming()
-    audio.src = tracks[track]
+    advance()
     audible = false
     if (continuing) play()
     else render()
@@ -126,7 +148,7 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
   const prefetchNext = (): void => {
     if (prefetched === upcoming() || audio.duration - audio.currentTime > PRELOAD_NEXT_SECONDS) return
     prefetched = upcoming()
-    fetch(tracks[prefetched]).catch(() => {})
+    fetch(prefetched).catch(() => {})
   }
 
   audio.addEventListener("playing", onPlaying)
@@ -134,6 +156,7 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
   audio.addEventListener("ended", next)
   audio.addEventListener("timeupdate", prefetchNext)
   toggle.addEventListener("click", () => (audible ? pause() : play()))
+  advance()
   render()
   play()
 }

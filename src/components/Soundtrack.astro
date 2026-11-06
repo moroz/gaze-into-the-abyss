@@ -5,7 +5,7 @@ import { byPosition } from "../scripts/by-position"
 const paths = (await getCollection("music")).sort(byPosition).map(({ data }) => `/music/${data.file}`)
 ---
 
-<audio src={paths[0]} preload="auto" data-tracks={JSON.stringify(paths)}></audio>
+<audio preload="auto" data-tracks={JSON.stringify(paths)}></audio>
 
 <p class="hint" role="status" hidden>Touch the abyss and the abyss gazeth upon thee</p>
 
