@@ -5,6 +5,7 @@
 # ///
 # Needs fluidsynth, the FluidR3 GM soundfont (Debian: fluid-soundfont-gm) and ffmpeg with libmp3lame;
 # uv supplies the Python packages.
+import hashlib
 import io
 import json
 import subprocess
@@ -23,6 +24,8 @@ SOUNDFONT = "/usr/share/sounds/sf2/FluidR3_GM.sf2"
 ROOT = Path(__file__).resolve().parent.parent
 MUSIC = ROOT / "public/music"
 PLAYLIST = ROOT / "src/data/music.json"
+# The source MIDI files and recordings, kept so a render needs no network; a missing one is downloaded from its source.
+SOURCES = ROOT / "sources"
 RATE = 44100
 REVERB_SECONDS = 11.0
 SILENCE_DB = -70
@@ -39,6 +42,7 @@ class Piece(NamedTuple):
     output: str
     source: str
     member: str
+    sha256: str
     slowdown: float
     first_bar: int | None
     last_bar: int | None
@@ -46,7 +50,7 @@ class Piece(NamedTuple):
 
 def playlist() -> list[Piece]:
     entries = sorted(json.loads(PLAYLIST.read_text()), key=lambda entry: entry["position"])
-    return [Piece(entry["file"], entry.get("sourceZip") or entry["midi"], entry["member"], entry["slowdown"],
+    return [Piece(entry["file"], entry["source"], entry["member"], entry["sha256"], entry["slowdown"],
                   entry.get("firstBar"), entry.get("lastBar"))
             for entry in entries]
 
@@ -153,19 +157,47 @@ def finish(samples: np.ndarray, music_seconds: float, cut_short: bool) -> np.nda
     return samples * 0.89 / np.abs(samples).max()
 
 
-def render(piece: Piece, work: Path) -> None:
-    request = urllib.request.Request(piece.source, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request) as response:
-        download = response.read()
-    if piece.source.endswith(".zip"):
-        download = zipfile.ZipFile(io.BytesIO(download)).read(piece.member)
-    midi = slowed(mido.MidiFile(file=io.BytesIO(download)), piece)
+def source_file(piece: Piece) -> Path:
+    """The piece's MIDI file or recording in sources/, downloaded first if it is missing, and checked against its
+    checksum."""
+    path = SOURCES / piece.member
+    if not path.exists():
+        request = urllib.request.Request(piece.source, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(request) as response:
+            download = response.read()
+        if piece.source.endswith(".zip"):
+            download = zipfile.ZipFile(io.BytesIO(download)).read(piece.member)
+        SOURCES.mkdir(exist_ok=True)
+        path.write_bytes(download)
+    if hashlib.sha256(path.read_bytes()).hexdigest() != piece.sha256:
+        raise SystemExit(f"{path}: its SHA-256 does not match the one in music.json")
+    return path
+
+
+def synthesised(piece: Piece, source: Path, work: Path) -> float:
+    """Play a MIDI file through FluidSynth into dry.wav and return its length in seconds."""
+    midi = slowed(mido.MidiFile(source), piece)
     midi.save(work / "slowed.mid")
     subprocess.run(["fluidsynth", "-ni", "-q", "-g", "0.5", "-r", str(RATE), "-R", "1", "-C", "1",
                     "-o", "synth.reverb.room-size=0.95", "-o", "synth.reverb.damp=0.3",
                     "-o", "synth.reverb.width=1.0", "-o", "synth.reverb.level=0.9",
                     "-o", "synth.chorus.depth=8", "-F", str(work / "dry.wav"), SOUNDFONT,
                     str(work / "slowed.mid")], check=True)
+    return midi.length
+
+
+def stretched(piece: Piece, source: Path, work: Path) -> float:
+    """Slow a recording into dry.wav, keeping its pitch, and return its length in seconds."""
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source), "-ac", "2",
+                    "-af", f"aresample={RATE},atempo={piece.slowdown}", "-c:a", "pcm_s16le", str(work / "dry.wav")],
+                   check=True)
+    with wave.open(str(work / "dry.wav")) as file:
+        return file.getnframes() / RATE
+
+
+def render(piece: Piece, work: Path) -> None:
+    source = source_file(piece)
+    music_seconds = (synthesised if source.suffix == ".mid" else stretched)(piece, source, work)
     write_wav(work / "dry.wav", saturate(read_wav(work / "dry.wav")))
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "dry.wav"),
                     "-i", str(work / "ir.wav"), "-filter_complex",
@@ -175,7 +207,7 @@ def render(piece: Piece, work: Path) -> None:
     wet = read_wav(work / "wet.wav")
     if np.abs(wet).max() >= 32766 / 32767:
         raise SystemExit(f"{piece.output}: the reverb mix clips; lower MIX_HEADROOM")
-    finished = finish(wet, midi.length, cut_short=piece.last_bar is not None)
+    finished = finish(wet, music_seconds, cut_short=piece.last_bar is not None)
     write_wav(work / "finished.wav", finished)
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "finished.wav"),
                     "-af", "loudnorm=I=-20:TP=-2:LRA=14", "-ar", str(RATE), "-c:a", "libmp3lame",

@@ -24,13 +24,14 @@ const music = defineCollection({
     arrangement: z.string(),
     edition: z.string(),
     editionUrl: z.url(),
-    sourceZip: z.url().optional(),
-    midi: z.url().optional(),
+    // A MIDI file (.mid), a zip holding one, or a recording; member names the file kept in sources/.
+    source: z.url(),
     member: z.string(),
+    sha256: z.string().regex(/^[0-9a-f]{64}$/),
     slowdown: z.number().positive().max(1),
     firstBar: z.number().int().positive().optional(),
     lastBar: z.number().int().positive().optional(),
-  }).refine((track) => Boolean(track.sourceZip) !== Boolean(track.midi), "Give either sourceZip or midi"),
+  }),
 })
 
 export const collections = { cosmos, music }
