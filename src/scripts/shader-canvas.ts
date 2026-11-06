@@ -6,10 +6,13 @@ void main() { gl_Position = vec4(position, 0.0, 1.0); }
 const RESOLUTION_SCALE = 0.75
 const MAX_PIXELS = 1_000_000
 const FRAME_INTERVAL_MS = 1000 / 24
+// Starting anywhere in the first ten minutes lands a visit in any scene; #t=<seconds> in the URL picks the moment.
+const RANDOM_START_MS = 600_000
 
 export function runShader(canvas: HTMLCanvasElement, fragment: string): void {
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  const started = performance.now() - Math.random() * 60000
+  const chosen = Number(new URLSearchParams(location.hash.slice(1)).get("t"))
+  const started = performance.now() - (chosen > 0 ? chosen * 1000 : Math.random() * RANDOM_START_MS)
   let gl: WebGLRenderingContext
   let resolution: WebGLUniformLocation | null
   let time: WebGLUniformLocation | null
