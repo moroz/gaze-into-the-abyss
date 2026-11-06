@@ -5,7 +5,10 @@ const float TAU = 6.2831853;
 const float SCENE_SECONDS = 40.0;
 const float BLEND_SECONDS = 8.0;
 const float SCENE_COUNT = 3.0;
-const float JULIA_ITERATIONS = 160.0;
+const vec2 SEAHORSE_VALLEY = vec2(-0.743643887037151, 0.131825904205330);
+const float MANDELBROT_ITERATIONS = 192.0;
+// Close enough to Seahorse Valley that only the boundary shows, never the whole set.
+const float MANDELBROT_START_ZOOM = 30.0;
 
 vec3 spectrum(float t) { return 0.5 + 0.5 * cos(TAU * (t + vec3(0.0, 0.33, 0.67))); }
 
@@ -49,27 +52,6 @@ vec2 complexSquare(vec2 z) { return vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y)
 
 mat2 rotation(float angle) { return mat2(cos(angle), sin(angle), -sin(angle), cos(angle)); }
 
-vec3 juliaBloom(vec2 uv, float t) {
-  float orbit = t * 0.045;
-  vec2 cardioidEdge = 0.5 * vec2(cos(orbit), sin(orbit)) - 0.25 * vec2(cos(2.0 * orbit), sin(2.0 * orbit));
-  vec2 c = cardioidEdge * (1.0 + 0.035 * sin(t * 0.11));
-  vec2 z = rotation(t * 0.02) * uv * 2.4;
-  float ringTrap = 1e9;
-  float crossTrap = 1e9;
-  float escapedAt = -1.0;
-  for (float n = 0.0; n < JULIA_ITERATIONS; n++) {
-    z = complexSquare(z) + c;
-    ringTrap = min(ringTrap, abs(length(z) - 0.6));
-    crossTrap = min(crossTrap, min(abs(z.x), abs(z.y)));
-    if (dot(z, z) > 64.0) { escapedAt = n; break; }
-  }
-  vec3 veins = spectrum(ringTrap * 1.5 + t * 0.03) * exp(-ringTrap * 9.0) + spectrum(crossTrap + 0.5 - t * 0.02) * exp(-crossTrap * 14.0) * 0.7;
-  if (escapedAt < 0.0) return veins;
-  float smoothed = escapedAt - log2(log2(dot(z, z))) + 4.0;
-  vec3 halo = spectrum(smoothed * 0.035 + t * 0.02) * smoothstep(2.0, 40.0, smoothed);
-  return halo + veins * 0.6;
-}
-
 vec3 kaliNebula(vec2 uv, float t) {
   vec2 p = rotation(t * 0.015) * uv * (0.5 + 0.12 * sin(t * 0.04)) + 0.25 * vec2(sin(t * 0.021), cos(t * 0.017));
   vec2 fold = vec2(0.53 + 0.04 * sin(t * 0.05), 0.71 + 0.04 * cos(t * 0.043));
@@ -83,6 +65,23 @@ vec3 kaliNebula(vec2 uv, float t) {
     previous = radius;
   }
   return colour * 0.35;
+}
+
+vec3 mandelbrotDive(vec2 uv, float sceneTime) {
+  uv = rotation(sceneTime * 0.04) * uv;
+  float zoom = MANDELBROT_START_ZOOM * exp(0.09 * sceneTime);
+  vec2 c = SEAHORSE_VALLEY + uv * 3.0 / zoom;
+  vec2 z = vec2(0.0);
+  float escapedAt = -1.0;
+  for (float n = 0.0; n < MANDELBROT_ITERATIONS; n++) {
+    z = complexSquare(z) + c;
+    if (dot(z, z) > 256.0) { escapedAt = n; break; }
+  }
+  if (escapedAt < 0.0) return vec3(0.0);
+  float smoothed = escapedAt - log2(log2(dot(z, z))) + 4.0;
+  float farFromSet = 2.0 + 3.0 * log2(zoom);
+  float nearness = clamp((smoothed - farFromSet) / (MANDELBROT_ITERATIONS - farFromSet), 0.0, 1.0);
+  return spectrum(smoothed * 0.015 - sceneTime * 0.05) * pow(nearness, 0.3);
 }
 
 float sceneTime(float scene) {
@@ -100,8 +99,8 @@ void main() {
   float weight = sceneWeight(0.0);
   if (weight > 0.0) colour += weight * liquidKaleidoscope(uv, time);
   weight = sceneWeight(1.0);
-  if (weight > 0.0) colour += weight * juliaBloom(uv, time);
-  weight = sceneWeight(2.0);
   if (weight > 0.0) colour += weight * kaliNebula(uv, time);
+  weight = sceneWeight(2.0);
+  if (weight > 0.0) colour += weight * mandelbrotDive(uv, sceneTime(2.0));
   gl_FragColor = vec4(colour, 1.0);
 }
