@@ -1,0 +1,27 @@
+---
+import Base from "../layouts/Base.astro"
+import Slideshow from "../components/Slideshow.astro"
+import Soundtrack from "../components/Soundtrack.astro"
+import Trip from "../components/Trip.astro"
+---
+
+<Base title="Gaze into the Abyss" description="Cosmic imagery, psychedelic shaders and slowed-down Romantic music, full screen.">
+  <main class="abyss">
+    <h1 class="visually-hidden">Gaze into the Abyss</h1>
+    <Slideshow secondsPerSlide={24} />
+    <Trip />
+    <Soundtrack />
+  </main>
+</Base>
+
+<script>
+  import { fadeChromeWhenIdle, keepScreenAwake } from "../scripts/presence"
+
+  fadeChromeWhenIdle(document.querySelector<HTMLElement>(".abyss")!)
+  keepScreenAwake()
+</script>
+
+<style>
+  .abyss { position: fixed; inset: 0; overflow: hidden; }
+  .abyss:global(.is-idle) { cursor: none; }
+</style>

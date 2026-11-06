@@ -1,0 +1,55 @@
+---
+import { getCollection } from "astro:content"
+import { byPosition } from "../scripts/by-position"
+import { getImage } from "astro:assets"
+
+interface Props {
+  secondsPerSlide: number
+}
+
+const { secondsPerSlide } = Astro.props
+const DRIFT_ZOOM_SIZES = "118vw"
+
+const slides = await Promise.all(
+  (await getCollection("cosmos")).sort(byPosition).map(async ({ data }) => {
+    const image = await getImage({ src: data.image, widths: [1280, 1920, 2560, 3840], format: "webp", quality: 80 })
+    return { src: image.src, srcset: image.srcSet.attribute }
+  }),
+)
+---
+
+<div class="slides" data-seconds-per-slide={secondsPerSlide} style={`--seconds-per-slide: ${secondsPerSlide}s`}>
+  {slides.map((slide, index) => (
+    <div class:list={["slide", { "is-active": index === 0 }]}>
+      {index === 0
+        ? <img src={slide.src} srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" fetchpriority="high" />
+        : <img data-src={slide.src} data-srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" />}
+    </div>
+  ))}
+</div>
+
+<script>
+  import { runSlideshow } from "../scripts/slideshow"
+
+  const container = document.querySelector<HTMLElement>(".slides")!
+  runSlideshow([...container.querySelectorAll<HTMLElement>(".slide")], Number(container.dataset.secondsPerSlide))
+</script>
+
+<style>
+  .slides { position: absolute; inset: 0; animation: hue 180s linear infinite; }
+  .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 4s ease-in-out; }
+  .slide:global(.is-active) { opacity: 1; }
+  img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.3) contrast(1.05); transform: var(--from); }
+  .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: drift calc(var(--seconds-per-slide) + 4s) ease-in-out both; }
+  .slide:nth-child(4n+1) { --from: scale(1.04); --to: scale(1.16) translate(-2%, -1.5%); }
+  .slide:nth-child(4n+2) { --from: scale(1.18) translate(2%, 1%); --to: scale(1.04) translate(-1%, 0); }
+  .slide:nth-child(4n+3) { --from: scale(1.08) translate(-2%, 1.5%) rotate(-1deg); --to: scale(1.18) translate(1.5%, -1%) rotate(1deg); }
+  .slide:nth-child(4n) { --from: scale(1.15) translate(0, -2%); --to: scale(1.05) translate(0, 2%); }
+
+  @keyframes drift { from { transform: var(--from); } to { transform: var(--to); } }
+  @keyframes hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slides, img { animation: none !important; }
+  }
+</style>

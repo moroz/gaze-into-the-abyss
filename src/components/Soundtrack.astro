@@ -1,0 +1,37 @@
+---
+import { getCollection } from "astro:content"
+import { byPosition } from "../scripts/by-position"
+
+const tracks = (await getCollection("music")).sort(byPosition)
+---
+
+{tracks.map(({ data }, index) => <audio src={`/music/${data.file}`} preload={index === 0 ? "auto" : "none"} />)}
+
+<p class="hint" role="status" hidden>Click on the abyss and the abyss shall gaze unto you</p>
+
+<button type="button" class="music-toggle" aria-label="Play music">
+  <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
+  <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11a.75.75 0 0 0 1.14.64l9-5.5a.75.75 0 0 0 0-1.28l-9-5.5A.75.75 0 0 0 4 2.5Z" /></svg>
+</button>
+
+<script>
+  import { runSoundtrack } from "../scripts/soundtrack"
+
+  runSoundtrack(
+    [...document.querySelectorAll("audio")],
+    document.querySelector<HTMLButtonElement>(".music-toggle")!,
+    document.querySelector<HTMLElement>(".hint")!,
+  )
+</script>
+
+<style>
+  .hint { position: absolute; left: 50%; top: 50%; z-index: 3; box-sizing: border-box; width: max-content; max-width: calc(100% - 64px); margin: 0; padding: 12px 22px; translate: -50% -50%; border-radius: 24px; background: #000000a6; font-size: 14px; font-weight: 600; line-height: 1.4; letter-spacing: .12em; text-align: center; text-transform: uppercase; text-shadow: 0 0 10px #5ee6ff88; pointer-events: none; opacity: 0; transition: opacity .8s; }
+  .hint:global(.is-showing) { opacity: 1; }
+
+  .music-toggle { position: absolute; left: 16px; bottom: 16px; z-index: 2; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: #ffffffcc; cursor: pointer; transition: opacity .6s; }
+  .music-toggle:hover { color: #ffffff; }
+  svg { width: 18px; height: 18px; fill: currentColor; filter: drop-shadow(0 1px 4px #000000); }
+  .icon-pause, .music-toggle:global(.is-playing) .icon-play { display: none; }
+  .music-toggle:global(.is-playing) .icon-pause { display: block; }
+  :global(.is-idle) .music-toggle:not(:focus-visible) { opacity: 0; }
+</style>

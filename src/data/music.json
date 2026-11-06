@@ -1,0 +1,31 @@
+[
+  {
+    "id": "aases-death",
+    "position": 1,
+    "file": "aases-death-adrift.mp3",
+    "title": "Aase, Adrift",
+    "composer": "Edvard Grieg",
+    "work": "Peer Gynt Suite No. 1, Op. 46, II. Aase's Death (1888), string version",
+    "arrangement": "At 75% of the written tempo.",
+    "edition": "Mutopia Project edition by Deborah Lowrey after Kunkel Brothers (1891), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=247",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/GriegE/O46/02-lamortdase-strings/02-lamortdase-strings-mids.zip",
+    "member": "aasesdeath.mid",
+    "slowdown": 0.75
+  },
+  {
+    "id": "violin-concerto",
+    "position": 2,
+    "file": "violin-concerto-adrift.mp3",
+    "title": "D Major, Adrift",
+    "composer": "Pyotr Ilyich Tchaikovsky",
+    "work": "Violin Concerto in D major, Op. 35, I. Allegro moderato (1878), bars 1 to 160",
+    "arrangement": "At 60% of the written tempo, the solo part on French horn.",
+    "edition": "Mutopia Project edition by Will Oram after Eulenburg (1920), public domain",
+    "editionUrl": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=466",
+    "sourceZip": "https://www.mutopiaproject.org/ftp/TchaikovskyPI/O35/tchai_op35/tchai_op35-mids.zip",
+    "member": "tchai_op35.mid",
+    "slowdown": 0.6,
+    "lastBar": 160
+  }
+]

@@ -1,0 +1,61 @@
+---
+import { getCollection } from "astro:content"
+import { byPosition } from "../scripts/by-position"
+import { Image } from "astro:assets"
+import Base from "../layouts/Base.astro"
+
+const images = (await getCollection("cosmos")).sort(byPosition)
+const tracks = (await getCollection("music")).sort(byPosition)
+---
+
+<Base title="Credits · Gaze into the Abyss" description="Where the imagery and music in Gaze into the Abyss come from.">
+  <main class="credits">
+    <h1>Credits</h1>
+    <p><a href="/">Back into the abyss</a></p>
+
+    <h2>Imagery</h2>
+    <p>Public domain, from the <a href="https://images.nasa.gov">NASA Image and Video Library</a>.</p>
+    <ul class="images">
+      {images.map(({ data }) => (
+        <li>
+          <Image src={data.image} alt="" width={160} height={100} fit="cover" format="webp" />
+          <div>
+            <a href={`https://images.nasa.gov/details/${data.nasaId}`}>{data.title}</a>
+            <span>{data.credit}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <h2>Music</h2>
+    <p>
+      Rendered from public-domain MIDI editions, every track by the same band of General MIDI instruments with a few
+      parts detuned and a long reverb, using FluidSynth and the FluidR3 GM soundfont by Frank Wen (MIT licence).
+    </p>
+    <ul class="tracks">
+      {tracks.map(({ data }) => (
+        <li>
+          <strong>{data.title}</strong>
+          <span>{data.composer}, {data.work}. {data.arrangement}</span>
+          <span>From the <a href={data.editionUrl}>{data.edition}</a>.</span>
+        </li>
+      ))}
+    </ul>
+  </main>
+</Base>
+
+<style>
+  .credits { box-sizing: border-box; max-width: 760px; margin: 0 auto; padding: 48px 16px 64px; line-height: 1.5; }
+  h1 { margin: 0 0 8px; font-size: 32px; }
+  h2 { margin: 40px 0 8px; font-size: 20px; }
+  ul { margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  li { display: flex; gap: 16px; align-items: center; }
+  .tracks li { flex-direction: column; align-items: flex-start; gap: 2px; }
+  li div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  li span { color: #9fb0c4; font-size: 14px; overflow-wrap: anywhere; }
+  img { flex: none; width: 120px; height: 75px; object-fit: cover; border-radius: 6px; }
+
+  @media (max-width: 480px) {
+    .images li { flex-direction: column; align-items: flex-start; }
+  }
+</style>
