@@ -11,10 +11,14 @@ const float FRACTAL_ITERATIONS = 128.0;
 
 vec3 spectrum(float t) { return 0.5 + 0.5 * cos(TAU * (t + vec3(0.0, 0.33, 0.67))); }
 
-float hash(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
+// Whole-number arithmetic below 2^24 is exact in 32-bit float, so neighbouring noise cells always agree on a shared
+// corner. A fract-of-a-large-product hash depends on rounding that mobile GPU compilers reorder, which tears the
+// noise into hard-edged cells on phones. The mod-289 permutation is from Stefan Gustavson's webgl-noise.
+float permute(float x) { return mod((x * 34.0 + 1.0) * x, 289.0); }
+
+float hash(vec2 cell) {
+  cell = mod(cell, 289.0);
+  return permute(permute(cell.x) + cell.y) / 289.0;
 }
 
 float noise(vec2 p) {
