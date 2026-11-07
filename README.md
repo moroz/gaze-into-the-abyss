@@ -45,7 +45,8 @@ script/make_loop.sh ~/Downloads/clip.mp4 NAME START LENGTH CROSSFADE HEIGHT   # 
 aws-vault exec medic -- script/upload_media.sh videos media/NAME.av1.mp4 media/NAME.h264.mp4
 ```
 
-A video's `overlay` is `calm` (breathing oversaturation, the default) or `psychedelic` (the hue drift). The slideshow
+A video's `overlay` is `calm` (breathing oversaturation, the default), `psychedelic` (the slow hue drift) or
+`hue-cycle` (once round the colour wheel every 12 s). The slideshow
 and the credits page pick everything up from the data file.
 
 ## Changing the music

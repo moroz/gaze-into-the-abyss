@@ -98,6 +98,7 @@ The trip overlay always runs at full strength. Instead, each video's `overlay` f
   contrast. Oversaturated old footage under the trip looks delightfully uncanny.
 - `psychedelic` (the default for images; set on the Swan Lake Flats bison): the 180 s hue drift, at 2.2×
   saturation for video against the images' 1.3×.
+- `hue-cycle` (the bloodybelly comb jelly): a heavy cycle, once round the colour wheel every 12 s at 2.4×.
 
 The hue drift now runs on each picture from one shared `--hue-delay`, so it stays in step across slides.
 

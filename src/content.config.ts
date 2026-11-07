@@ -4,7 +4,7 @@ import { file } from "astro/loaders"
 
 // A background is an image or a looping video. Video paths are relative to the media origin (see media.ts).
 // The trip overlay always runs. overlay "calm" gives a video a breathing oversaturation; "psychedelic" (the default
-// for images) gives it the hue drift.
+// for images) gives it the slow hue drift; "hue-cycle" spins it round the colour wheel every 12 s.
 const backgrounds = defineCollection({
   loader: file("src/data/backgrounds.json"),
   schema: ({ image }) => z.object({
@@ -16,7 +16,7 @@ const backgrounds = defineCollection({
     sourceUrl: z.url(),
     image: image().optional(),
     video: z.object({ av1: z.string().endsWith(".av1.mp4"), h264: z.string().endsWith(".h264.mp4") }).optional(),
-    overlay: z.enum(["calm", "psychedelic"]).optional(),
+    overlay: z.enum(["calm", "psychedelic", "hue-cycle"]).optional(),
   }).refine((entry) => (entry.image === undefined) !== (entry.video === undefined), "needs exactly one of image and video"),
 })
 

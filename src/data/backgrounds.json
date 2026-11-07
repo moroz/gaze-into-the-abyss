@@ -120,5 +120,19 @@
       "av1": "videos/psychedelic-medusa.7c1282bfb155.av1.mp4",
       "h264": "videos/psychedelic-medusa.61378112b594.h264.mp4"
     }
+  },
+  {
+    "id": "bloodybelly-comb-jelly",
+    "position": 12,
+    "title": "Bloodybelly comb jelly, Lampocteis cruentiventer",
+    "author": "Eric Polk",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lampocteis_cruentiventer_-_MBA.webm",
+    "video": {
+      "av1": "videos/bloodybelly-comb-jelly.a0b2ee59a012.av1.mp4",
+      "h264": "videos/bloodybelly-comb-jelly.e57944be681a.h264.mp4"
+    },
+    "overlay": "hue-cycle"
   }
 ]

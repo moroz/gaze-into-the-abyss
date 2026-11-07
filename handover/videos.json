@@ -101,5 +101,22 @@
       "crossfade": 2,
       "height": 720
     }
+  },
+  {
+    "name": "bloodybelly-comb-jelly",
+    "title": "Bloodybelly comb jelly, Lampocteis cruentiventer",
+    "author": "Eric Polk",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lampocteis_cruentiventer_-_MBA.webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/6/66/Lampocteis_cruentiventer_-_MBA.webm",
+    "loop": {
+      "start": 3,
+      "length": 8,
+      "crossfade": 2,
+      "height": 1080
+    },
+    "overlay": "hue-cycle",
+    "note": "Share-alike: the loop is CC BY-SA 4.0 too. The jelly drifts, so the crossfade briefly doubles it."
   }
 ]

@@ -62,6 +62,8 @@ const slides = await Promise.all(
      paired with the psychedelia takes the hue drift at a stronger saturation than the images. */
   .slide[data-kind="video"][data-overlay="calm"] .picture { animation: oversaturate 40s ease-in-out var(--hue-delay, 0s) infinite alternate; }
   .slide[data-kind="video"][data-overlay="psychedelic"] .picture { animation: hue-oversaturated 180s linear var(--hue-delay, 0s) infinite; }
+  /* A heavy hue cycle: once round the colour wheel every 12 s, at the strongest saturation. */
+  .slide[data-kind="video"][data-overlay="hue-cycle"] .picture { animation: hue-cycle 12s linear infinite; }
   img { transform: var(--from); }
   .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: drift var(--drift-ms) ease-in-out both, hue 180s linear var(--hue-delay, 0s) infinite; }
 
@@ -88,6 +90,10 @@ const slides = await Promise.all(
   @keyframes oversaturate {
     from { filter: saturate(1.8) contrast(1.08); }
     to { filter: saturate(2.6) contrast(1.12); }
+  }
+  @keyframes hue-cycle {
+    from { filter: saturate(2.4) contrast(1.1) hue-rotate(0deg); }
+    to { filter: saturate(2.4) contrast(1.1) hue-rotate(360deg); }
   }
   @keyframes hue-oversaturated {
     from { filter: brightness(.85) saturate(2.2) contrast(1.08) hue-rotate(0deg); }
