@@ -10,7 +10,7 @@ const slides = await Promise.all(
   (await getCollection("backgrounds")).sort(byPosition).map(async ({ data }) => {
     const credit = { title: data.title, author: data.author, licence: data.licence, licenceUrl: data.licenceUrl, sourceUrl: data.sourceUrl }
     const overlay = data.overlay ?? (data.video ? "calm" : "psychedelic")
-    if (data.video) return { kind: "video", overlay, credit, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) } as const
+    if (data.video) return { kind: "video", overlay, credit, effects: data.effects, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) } as const
     const image = await getImage({ src: data.image!, widths: [1280, 1920, 2560, 3840], format: "webp", quality: 80 })
     return { kind: "image", overlay, credit, src: image.src, srcset: image.srcSet.attribute } as const
   }),
@@ -22,7 +22,7 @@ const slides = await Promise.all(
     <div class="slide" data-kind={slide.kind} data-overlay={slide.overlay} data-credit={JSON.stringify(slide.credit)}>
       {slide.kind === "video"
         ? <div class="picture">
-            <video crossorigin="anonymous" muted playsinline loop preload="none" disablepictureinpicture data-av1={slide.av1} data-h264={slide.h264}></video>
+            <video crossorigin="anonymous" muted playsinline loop preload="none" disablepictureinpicture data-av1={slide.av1} data-h264={slide.h264} data-effects={slide.effects?.join(" ")}></video>
             <canvas class="warp" aria-hidden="true"></canvas>
           </div>
         : <img class="picture" data-src={slide.src} data-srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" />}

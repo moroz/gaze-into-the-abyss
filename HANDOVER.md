@@ -119,6 +119,9 @@ the slideshow picks one effect on top, from the seeded `video effects` stream (`
   afterimages. Two frame buffers at canvas size.
 - `thermal`: brightness mapped onto a cycling neon palette.
 
+An entry's `effects` narrows the draw to the effects that suit that clip: the medusa is always a kaleidoscope, the
+bison in snow always thermal.
+
 The `<video crossorigin>` stays underneath; the canvas removes itself if WebGL 2, its context or the frames are
 unavailable. The candidates were tried out first in a demo page (Abyss Effect Lab) before these five were chosen,
 alongside the `moire` overlay scene.

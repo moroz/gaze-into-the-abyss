@@ -84,10 +84,15 @@ const announce = (slide: HTMLElement): void => {
 export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]): Promise<void> {
   const { between, next: random, pick, shuffledForever } = randomStream("slides")
   const next = shuffledForever(slides)
-  // Each time a video comes on screen it gets one effect; #effect=<name> holds every video to that one.
+  // Each time a video comes on screen it gets one effect, from its own list where it has one (data-effects);
+  // #effect=<name> holds every video to that one.
   const effects = randomStream("video effects")
   const chosenEffect = new URLSearchParams(location.hash.slice(1)).get("effect") as VideoEffect | null
-  const effectFor = (): VideoEffect => (chosenEffect && VIDEO_EFFECTS.includes(chosenEffect) ? chosenEffect : effects.pick(VIDEO_EFFECTS))
+  const effectFor = (video: HTMLVideoElement): VideoEffect => {
+    if (chosenEffect && VIDEO_EFFECTS.includes(chosenEffect)) return chosenEffect
+    const suited = (video.dataset.effects?.split(" ") ?? []).filter((name): name is VideoEffect => VIDEO_EFFECTS.includes(name as VideoEffect))
+    return effects.pick(suited.length ? suited : VIDEO_EFFECTS)
+  }
   let current: HTMLElement | undefined
 
   container.style.setProperty("--hue-delay", `-${random() * 180}s`)
@@ -113,7 +118,7 @@ export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]
     arriving.classList.add("is-active")
     const picture = pictureOf(arriving)
     if (picture instanceof HTMLVideoElement) {
-      picture.dataset.effect = effectFor()
+      picture.dataset.effect = effectFor(picture)
       picture.play().catch(() => {})
     }
     announce(arriving)

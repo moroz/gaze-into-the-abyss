@@ -59,7 +59,10 @@
     "video": {
       "av1": "videos/bison-grazing-snow.336cf62f500c.av1.mp4",
       "h264": "videos/bison-grazing-snow.f7a6248b7889.h264.mp4"
-    }
+    },
+    "effects": [
+      "thermal"
+    ]
   },
   {
     "id": "bison-lamar-valley-a",
@@ -119,7 +122,10 @@
     "video": {
       "av1": "videos/psychedelic-medusa.7c1282bfb155.av1.mp4",
       "h264": "videos/psychedelic-medusa.61378112b594.h264.mp4"
-    }
+    },
+    "effects": [
+      "kaleidoscope"
+    ]
   },
   {
     "id": "bloodybelly-comb-jelly",

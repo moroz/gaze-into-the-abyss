@@ -1,10 +1,12 @@
 import { defineCollection } from "astro:content"
 import { z } from "astro/zod"
 import { file } from "astro/loaders"
+import { VIDEO_EFFECTS } from "./scripts/video-warp"
 
 // A background is an image or a looping video. Video paths are relative to the media origin (see media.ts).
 // The trip overlay always runs. overlay "calm" gives a video a breathing oversaturation; "psychedelic" (the default
-// for images) gives it the slow hue drift; "hue-cycle" spins it round the colour wheel every 12 s.
+// for images) gives it the slow hue drift; "hue-cycle" spins it round the colour wheel every 12 s. effects narrows
+// the warp effects a video draws from each time it shows (all five without it).
 const backgrounds = defineCollection({
   loader: file("src/data/backgrounds.json"),
   schema: ({ image }) => z.object({
@@ -17,6 +19,7 @@ const backgrounds = defineCollection({
     image: image().optional(),
     video: z.object({ av1: z.string().endsWith(".av1.mp4"), h264: z.string().endsWith(".h264.mp4") }).optional(),
     overlay: z.enum(["calm", "psychedelic", "hue-cycle"]).optional(),
+    effects: z.array(z.enum(VIDEO_EFFECTS)).nonempty().optional(),
   }).refine((entry) => (entry.image === undefined) !== (entry.video === undefined), "needs exactly one of image and video"),
 })
 

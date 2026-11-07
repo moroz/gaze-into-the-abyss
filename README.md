@@ -48,7 +48,8 @@ aws-vault exec medic -- script/upload_media.sh videos media/NAME.av1.mp4 media/N
 ```
 
 A video's `overlay` is `calm` (breathing oversaturation, the default), `psychedelic` (the slow hue drift) or
-`hue-cycle` (once round the colour wheel every 12 s). The slideshow
+`hue-cycle` (once round the colour wheel every 12 s). Its optional `effects` lists the warp effects that suit it,
+e.g. `["kaleidoscope"]`; without it, each showing draws from all five. The slideshow
 and the credits page pick everything up from the data file.
 
 ## Changing the music
