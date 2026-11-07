@@ -5,6 +5,7 @@ set -euo pipefail
 if [[ $# -lt 2 ]]; then
   echo "usage: $0 INPUT NAME [START_SECONDS] [LENGTH_SECONDS] [CROSSFADE_SECONDS] [HEIGHT]" >&2
   echo "writes media/NAME.av1.mp4 and media/NAME.h264.mp4, a silent loop LENGTH - CROSSFADE long" >&2
+  echo "ASSUME_BT709=1 retags a mislabelled input (e.g. bt2020c on SDR footage, which ffmpeg cannot scale) as bt709" >&2
   exit 1
 fi
 
@@ -18,12 +19,15 @@ height=${6:-1080}
 out_dir="$(dirname "$0")/../media"
 mkdir -p "$out_dir"
 
+retag=""
+[[ ${ASSUME_BT709:-} == 1 ]] && retag="setparams=colorspace=bt709:color_trc=bt709:color_primaries=bt709,"
+
 body=$(echo "$length - $crossfade" | bc -l)
 offset=$(echo "$length - 2 * $crossfade" | bc -l)
 
 # The loop starts CROSSFADE seconds into the excerpt and ends by fading into the excerpt's first CROSSFADE
 # seconds, which run up to the same frame the loop starts on.
-loop_filter="[0:v]trim=start=${start}:duration=${length},setpts=PTS-STARTPTS,fps=30,scale=-2:${height}:flags=lanczos,format=yuv420p,split[excerpt][again];
+loop_filter="[0:v]trim=start=${start}:duration=${length},setpts=PTS-STARTPTS,${retag}fps=30,scale=-2:${height}:flags=lanczos,format=yuv420p,split[excerpt][again];
 [again]trim=duration=${crossfade},setpts=PTS-STARTPTS[head];
 [excerpt]trim=start=${crossfade},setpts=PTS-STARTPTS[body];
 [body][head]xfade=transition=fade:duration=${crossfade}:offset=${offset},format=yuv420p[loop]"
