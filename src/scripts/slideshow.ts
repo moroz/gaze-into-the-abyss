@@ -52,15 +52,19 @@ const loadVideo = (video: HTMLVideoElement): Promise<boolean> => {
       video.append(source)
     }
   }
+  // The listeners go once the race settles, so they do not pile up each time the video comes round again.
+  const settled = new AbortController()
   const ready = new Promise<boolean>((resolve) => {
     if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) resolve(true)
-    video.addEventListener("canplaythrough", () => resolve(true), { once: true })
+    video.addEventListener("canplaythrough", () => resolve(true), { signal: settled.signal })
     // With <source> children the element itself never fires error; the last source does, once every one has failed.
-    video.lastElementChild!.addEventListener("error", () => resolve(false), { once: true })
+    video.lastElementChild!.addEventListener("error", () => resolve(false), { signal: settled.signal })
     video.play().catch(() => resolve(false))
   })
   return within(ready, VIDEO_PATIENCE_MS, false).then((playable) => {
-    if (!playable) video.pause()
+    settled.abort()
+    // The first background can be on screen before it is ready; a slow one there keeps playing.
+    if (!playable && !video.closest(".slide")?.classList.contains("is-active")) video.pause()
     return playable
   })
 }
@@ -137,8 +141,11 @@ export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]
     }, holdMs)
   }
 
-  const first = next()
-  await within(load(first), FIRST_IMAGE_PATIENCE_MS, false)
+  // The first background gets FIRST_IMAGE_PATIENCE_MS under the dark veil. One that is merely slow is shown and
+  // goes on loading; one that fails outright gives way to the next that loads.
+  let first = next()
+  const outcome = await within(load(first).then((ok) => (ok ? "loaded" : "failed")), FIRST_IMAGE_PATIENCE_MS, "slow")
+  if (outcome === "failed") first = (await prepare()) ?? first
   const hold = between(...HOLD_MS)
   show(first, "crossfade", hold)
   continueAfter(hold)
