@@ -6,8 +6,9 @@
 //   slit-scan     each row a slightly different moment, up to about a second and a half old
 //   echo          each frame melts into the last, a little zoomed and turned, the leftovers drifting round the hues
 //   thermal       brightness mapped onto a neon palette that keeps cycling
-// The video stays in the page underneath, so if WebGL 2 is missing, the context is lost or the frames cannot be read
-// (no CORS), the canvas is removed and the plain video shows instead.
+// Only a video on screen (arriving, showing or leaving) holds a WebGL context; a paused one releases it. The video
+// stays in the page underneath, so if WebGL 2 is missing or the context is lost, the canvas is removed and the plain
+// video shows instead. (Frames without CORS never get this far: with crossorigin the video itself fails to load.)
 
 export const VIDEO_EFFECTS = ["ripple", "kaleidoscope", "slit-scan", "echo", "thermal"] as const
 export type VideoEffect = (typeof VIDEO_EFFECTS)[number]
@@ -105,8 +106,8 @@ void main() { colour = texture(source, uv); }`
 const MAX_PIXEL_RATIO = 1.5
 const HISTORY_LAYERS = 32
 const HISTORY_SIZE = [384, 216] as const
-// A history frame every third animation frame: 32 of them reach back about a second and a half.
-const HISTORY_EVERY = 3
+// A history frame every 50 ms, whatever the display's refresh rate: 32 of them reach back 1.6 s.
+const HISTORY_INTERVAL_MS = 50
 const ECHO_MIX = 0.14
 
 type Uniforms = Record<string, WebGLUniformLocation | null>
@@ -136,23 +137,52 @@ const smoothTexture = (gl: WebGL2RenderingContext, target: number): WebGLTexture
   return texture
 }
 
-export function warpVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): void {
+export function warpVideo(video: HTMLVideoElement, firstCanvas: HTMLCanvasElement): void {
+  let canvas = firstCanvas
+  let broken = false
   let gl: WebGL2RenderingContext | undefined
   let warp: Program
   let copy: Program
   let frameTexture: WebGLTexture
+  let frameSize = ""
   let history: WebGLTexture | undefined
   let historyFramebuffer: WebGLFramebuffer
   let newest = 0
-  let historyTick = 0
+  let rememberedAt = 0
   let echo: [Target, Target] | undefined
   let echoSize = ""
   let shownEffect: string | undefined
   let fresh = true
   let frame = 0
 
-  const giveUp = (): void => {
+  const onScreen = (): boolean => !!video.closest(".slide")?.matches(".is-active, .is-leaving")
+
+  // Frees this video's context and everything in it. Browsers cap live contexts (8 on Android) and evict the oldest,
+  // which would be the trip overlay's, so only the videos on screen may hold one. The canvas is swapped for a fresh
+  // one, because a context lost on purpose cannot be created anew on the same canvas.
+  const release = (): void => {
+    if (!gl) return
+    const context = gl
+    gl = undefined
+    history = undefined
+    echo = undefined
+    echoSize = ""
+    frameSize = ""
+    shownEffect = undefined
+    canvas.removeEventListener("webglcontextlost", giveUp)
+    context.getExtension("WEBGL_lose_context")?.loseContext()
+    if (broken) return
+    const replacement = canvas.cloneNode() as HTMLCanvasElement
+    replacement.classList.remove("is-drawing")
+    canvas.replaceWith(replacement)
+    canvas = replacement
+  }
+
+  // For good: WebGL 2 is missing or the context was lost, so the plain video shows from now on.
+  function giveUp(): void {
+    broken = true
     cancelAnimationFrame(frame)
+    release()
     canvas.remove()
   }
 
@@ -160,6 +190,7 @@ export function warpVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): v
     const context = canvas.getContext("webgl2", { antialias: false, alpha: false })
     if (!context) return false
     gl = context
+    canvas.addEventListener("webglcontextlost", giveUp)
     warp = build(gl, WARP, ["frame", "history", "previous", "time", "canvasSize", "videoSize", "effect", "newest", "layers", "echoMix"])
     copy = build(gl, COPY, ["source"])
     gl.bindVertexArray(gl.createVertexArray())
@@ -177,21 +208,26 @@ export function warpVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): v
     gl.uniform1i(warp.uniforms.previous, 2)
     gl.useProgram(copy.program)
     gl.uniform1i(copy.uniforms.source, 0)
+    fresh = true
     return true
   }
 
-  const target = (width: number, height: number): Target => {
-    const texture = smoothTexture(gl!, gl!.TEXTURE_2D)
-    gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA8, width, height, 0, gl!.RGBA, gl!.UNSIGNED_BYTE, null)
-    const framebuffer = gl!.createFramebuffer()
-    gl!.bindFramebuffer(gl!.FRAMEBUFFER, framebuffer)
-    gl!.framebufferTexture2D(gl!.FRAMEBUFFER, gl!.COLOR_ATTACHMENT0, gl!.TEXTURE_2D, texture, 0)
+  const target = (g: WebGL2RenderingContext, width: number, height: number): Target => {
+    const texture = smoothTexture(g, g.TEXTURE_2D)
+    g.texImage2D(g.TEXTURE_2D, 0, g.RGBA8, width, height, 0, g.RGBA, g.UNSIGNED_BYTE, null)
+    const framebuffer = g.createFramebuffer()
+    g.bindFramebuffer(g.FRAMEBUFFER, framebuffer)
+    g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, texture, 0)
     return { texture, framebuffer }
   }
 
+  const dispose = (g: WebGL2RenderingContext, { texture, framebuffer }: Target): void => {
+    g.deleteTexture(texture)
+    g.deleteFramebuffer(framebuffer)
+  }
+
   // Copies the current frame, scaled down on the GPU, into one layer of the slit-scan history.
-  const remember = (layer: number): void => {
-    const g = gl!
+  const remember = (g: WebGL2RenderingContext, layer: number): void => {
     g.bindFramebuffer(g.FRAMEBUFFER, historyFramebuffer)
     g.framebufferTextureLayer(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, history!, 0, layer)
     g.viewport(0, 0, ...HISTORY_SIZE)
@@ -201,24 +237,32 @@ export function warpVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): v
     g.drawArrays(g.TRIANGLES, 0, 3)
   }
 
-  const keepHistory = (): void => {
-    const g = gl!
+  const keepHistory = (g: WebGL2RenderingContext, now: number): void => {
     if (!history) {
       history = smoothTexture(g, g.TEXTURE_2D_ARRAY)
       g.texStorage3D(g.TEXTURE_2D_ARRAY, 1, g.RGBA8, ...HISTORY_SIZE, HISTORY_LAYERS)
     }
     if (fresh) {
-      for (let layer = 0; layer < HISTORY_LAYERS; layer++) remember(layer)
-    } else if (++historyTick % HISTORY_EVERY === 0) {
+      for (let layer = 0; layer < HISTORY_LAYERS; layer++) remember(g, layer)
+      rememberedAt = now
+    } else if (now - rememberedAt >= HISTORY_INTERVAL_MS) {
+      rememberedAt = now
       newest = (newest + 1) % HISTORY_LAYERS
-      remember(newest)
+      remember(g, newest)
     }
   }
 
   const draw = (now: number): void => {
-    if (!gl || video.paused) return
+    if (broken || video.paused) return
     frame = requestAnimationFrame(draw)
-    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
+    // A video playing unseen while the slideshow prepares it costs nothing here.
+    if (!onScreen() || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
+    try {
+      if (!gl && !setUp()) return giveUp()
+    } catch {
+      return giveUp()
+    }
+    const g = gl!
     const ratio = Math.min(devicePixelRatio, MAX_PIXEL_RATIO)
     const width = Math.round(canvas.clientWidth * ratio)
     const height = Math.round(canvas.clientHeight * ratio)
@@ -232,63 +276,69 @@ export function warpVideo(video: HTMLVideoElement, canvas: HTMLCanvasElement): v
       shownEffect = video.dataset.effect
       fresh = true
     }
-
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, frameTexture)
-    try {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video)
-    } catch {
-      return giveUp()
-    }
-    if (VIDEO_EFFECTS[effect] === "slit-scan") keepHistory()
+    // Before the frame upload: creating textures rebinds unit 0, and the draw must not read what it writes.
     if (VIDEO_EFFECTS[effect] === "echo" && echoSize !== `${width}x${height}`) {
+      if (echo) for (const old of echo) dispose(g, old)
       echoSize = `${width}x${height}`
-      echo = [target(width, height), target(width, height)]
+      echo = [target(g, width, height), target(g, width, height)]
       fresh = true
     }
 
-    gl.useProgram(warp.program)
-    gl.uniform1f(warp.uniforms.time, now / 1000)
-    gl.uniform2f(warp.uniforms.canvasSize, width, height)
-    gl.uniform2f(warp.uniforms.videoSize, video.videoWidth, video.videoHeight)
-    gl.uniform1i(warp.uniforms.effect, effect)
-    gl.uniform1f(warp.uniforms.newest, newest)
-    gl.uniform1f(warp.uniforms.layers, HISTORY_LAYERS)
-    gl.uniform1f(warp.uniforms.echoMix, fresh ? 1 : ECHO_MIX)
-    gl.activeTexture(gl.TEXTURE1)
-    gl.bindTexture(gl.TEXTURE_2D_ARRAY, history ?? null)
-    gl.activeTexture(gl.TEXTURE2)
-    gl.bindTexture(gl.TEXTURE_2D, echo ? echo[0].texture : null)
+    g.activeTexture(g.TEXTURE0)
+    g.bindTexture(g.TEXTURE_2D, frameTexture)
+    const size = `${video.videoWidth}x${video.videoHeight}`
+    try {
+      if (size !== frameSize) {
+        g.texImage2D(g.TEXTURE_2D, 0, g.RGB, g.RGB, g.UNSIGNED_BYTE, video)
+        frameSize = size
+      } else {
+        g.texSubImage2D(g.TEXTURE_2D, 0, 0, 0, g.RGB, g.UNSIGNED_BYTE, video)
+      }
+    } catch {
+      // Frames the page may not read (a tainted cross-origin response) throw here: show the plain video instead.
+      return giveUp()
+    }
+    if (VIDEO_EFFECTS[effect] === "slit-scan") keepHistory(g, now)
+
+    g.useProgram(warp.program)
+    g.uniform1f(warp.uniforms.time, now / 1000)
+    g.uniform2f(warp.uniforms.canvasSize, width, height)
+    g.uniform2f(warp.uniforms.videoSize, video.videoWidth, video.videoHeight)
+    g.uniform1i(warp.uniforms.effect, effect)
+    g.uniform1f(warp.uniforms.newest, newest)
+    g.uniform1f(warp.uniforms.layers, HISTORY_LAYERS)
+    g.uniform1f(warp.uniforms.echoMix, fresh ? 1 : ECHO_MIX)
+    g.activeTexture(g.TEXTURE0)
+    g.bindTexture(g.TEXTURE_2D, frameTexture)
+    g.activeTexture(g.TEXTURE1)
+    g.bindTexture(g.TEXTURE_2D_ARRAY, history ?? null)
+    g.activeTexture(g.TEXTURE2)
+    g.bindTexture(g.TEXTURE_2D, echo ? echo[0].texture : null)
 
     if (VIDEO_EFFECTS[effect] === "echo" && echo) {
       // Draw into the spare buffer reading the last one, then show it and keep it as the next frame's last.
-      gl.bindFramebuffer(gl.FRAMEBUFFER, echo[1].framebuffer)
-      gl.viewport(0, 0, width, height)
-      gl.drawArrays(gl.TRIANGLES, 0, 3)
+      g.bindFramebuffer(g.FRAMEBUFFER, echo[1].framebuffer)
+      g.viewport(0, 0, width, height)
+      g.drawArrays(g.TRIANGLES, 0, 3)
       echo.reverse()
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-      gl.useProgram(copy.program)
-      gl.activeTexture(gl.TEXTURE0)
-      gl.bindTexture(gl.TEXTURE_2D, echo[0].texture)
-      gl.drawArrays(gl.TRIANGLES, 0, 3)
+      g.bindFramebuffer(g.FRAMEBUFFER, null)
+      g.useProgram(copy.program)
+      g.activeTexture(g.TEXTURE0)
+      g.bindTexture(g.TEXTURE_2D, echo[0].texture)
+      g.drawArrays(g.TRIANGLES, 0, 3)
     } else {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-      gl.viewport(0, 0, width, height)
-      gl.drawArrays(gl.TRIANGLES, 0, 3)
+      g.bindFramebuffer(g.FRAMEBUFFER, null)
+      g.viewport(0, 0, width, height)
+      g.drawArrays(g.TRIANGLES, 0, 3)
     }
     fresh = false
     canvas.classList.add("is-drawing")
   }
 
-  canvas.addEventListener("webglcontextlost", giveUp)
   video.addEventListener("playing", () => {
-    if (!canvas.isConnected) return
-    try {
-      if (!gl && !setUp()) return giveUp()
-    } catch {
-      return giveUp()
-    }
+    if (broken) return
     cancelAnimationFrame(frame)
     frame = requestAnimationFrame(draw)
   })
+  video.addEventListener("pause", release)
 }
