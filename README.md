@@ -10,10 +10,9 @@ pnpm dev
 
 ## What it is made of
 
-- **Imagery**: NASA images in `src/assets/cosmos` and looping, oversaturated, warped videos of herds, birds, deep-sea
-  jellies, lava, aurora and desert served from
-  a CloudFront CDN (`infra/`), all listed with their credits in `src/data/backgrounds.json`. Astro builds a
-  responsive set of sizes for each image. They play in a fresh random order on every visit, each for a random
+- **Imagery**: NASA images and looping, oversaturated, warped videos of herds, birds, deep-sea jellies, lava, aurora
+  and desert, all served from a CloudFront CDN (`infra/`) and listed with their credits in
+  `src/data/backgrounds.json`. Each image comes in a responsive set of widths. They play in a fresh random order on every visit, each for a random
   stretch, changing by a crossfade, a dip through black, a bloom or a slow dissolve; the one on screen is credited
   beside the music.
 - **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with five scenes over the imagery: a liquid
@@ -40,7 +39,14 @@ for video: a loop is an excerpt with a crossfade, so it adapts the work. Check t
 the collection. Credit the title, author, source and licence; a share-alike item makes its loop share-alike
 too, and `/credits` says so beside each one.
 
-Put an image's file in `src/assets/cosmos` and add an entry to `src/data/backgrounds.json`. For a video, cut a loop
+For an image, add an entry to `src/data/backgrounds.json` without `image`, then publish the file, named after the
+entry's id; the script makes the WebP widths and a thumbnail, uploads them with the original, and fills in `image`:
+
+```bash
+aws-vault exec medic -- node script/publish_images.mjs ~/Pictures/orion.webp
+```
+
+For a video, cut a loop
 and upload it, then add an entry whose `video` holds the two printed paths (without the origin):
 
 ```bash

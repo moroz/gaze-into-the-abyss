@@ -2,19 +2,19 @@
 import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
 import { mediaUrl } from "../scripts/media"
-import { getImage } from "astro:assets"
 
 const DRIFT_ZOOM_SIZES = "118vw"
 
-const slides = await Promise.all(
-  (await getCollection("backgrounds")).sort(byPosition).map(async ({ data }) => {
-    const credit = { title: data.title, author: data.author, licence: data.licence, licenceUrl: data.licenceUrl, sourceUrl: data.sourceUrl }
-    const overlay = data.overlay ?? (data.video ? "calm" : "psychedelic")
-    if (data.video) return { kind: "video", overlay, credit, effects: data.effects, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) } as const
-    const image = await getImage({ src: data.image!, widths: [1280, 1920, 2560, 3840], format: "webp", quality: 80 })
-    return { kind: "image", overlay, credit, src: image.src, srcset: image.srcSet.attribute } as const
-  }),
-)
+const slides = (await getCollection("backgrounds")).sort(byPosition).map(({ data }) => {
+  const credit = { title: data.title, author: data.author, licence: data.licence, licenceUrl: data.licenceUrl, sourceUrl: data.sourceUrl }
+  const overlay = data.overlay ?? (data.video ? "calm" : "psychedelic")
+  if (data.video) return { kind: "video", overlay, credit, effects: data.effects, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) } as const
+  // An image's widths come from the CDN as a srcset; src is the fallback for a browser without one.
+  const { widths } = data.image!
+  const src = mediaUrl((widths.findLast(({ width }) => width <= 1920) ?? widths[0]).path)
+  const srcset = widths.map(({ width, path }) => `${mediaUrl(path)} ${width}w`).join(", ")
+  return { kind: "image", overlay, credit, src, srcset } as const
+})
 ---
 
 <div class="slides">

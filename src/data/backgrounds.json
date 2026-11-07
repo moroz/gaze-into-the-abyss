@@ -6,7 +6,28 @@
     "author": "NASA/JPL-Caltech",
     "licence": "Public domain",
     "sourceUrl": "https://images.nasa.gov/details/PIA03654",
-    "image": "../assets/cosmos/galactic-center.webp"
+    "image": {
+      "widths": [
+        {
+          "width": 1280,
+          "path": "images/galactic-center-1280.0186d04e5537.webp"
+        },
+        {
+          "width": 1920,
+          "path": "images/galactic-center-1920.1fc8b08ca158.webp"
+        },
+        {
+          "width": 2560,
+          "path": "images/galactic-center-2560.eeedefe47e0c.webp"
+        },
+        {
+          "width": 3840,
+          "path": "images/galactic-center-3840.4917f78d7a1f.webp"
+        }
+      ],
+      "thumb": "images/galactic-center-thumb.5cdaa93335f0.webp",
+      "original": "images/galactic-center.873915747d91.original.webp"
+    }
   },
   {
     "id": "peony",
@@ -15,7 +36,28 @@
     "author": "NASA/JPL-Caltech/Potsdam Univ.",
     "licence": "Public domain",
     "sourceUrl": "https://images.nasa.gov/details/PIA10955",
-    "image": "../assets/cosmos/peony.webp"
+    "image": {
+      "widths": [
+        {
+          "width": 1280,
+          "path": "images/peony-1280.e2568fa53809.webp"
+        },
+        {
+          "width": 1920,
+          "path": "images/peony-1920.6b1da54267b3.webp"
+        },
+        {
+          "width": 2560,
+          "path": "images/peony-2560.a0eae7301c04.webp"
+        },
+        {
+          "width": 3840,
+          "path": "images/peony-3840.23b257fa2253.webp"
+        }
+      ],
+      "thumb": "images/peony-thumb.431f5eac5827.webp",
+      "original": "images/peony.5e121bebef8b.original.webp"
+    }
   },
   {
     "id": "spider",
@@ -24,7 +66,28 @@
     "author": "NASA/JPL-Caltech/2MASS",
     "licence": "Public domain",
     "sourceUrl": "https://images.nasa.gov/details/PIA20357",
-    "image": "../assets/cosmos/spider.webp"
+    "image": {
+      "widths": [
+        {
+          "width": 1280,
+          "path": "images/spider-1280.602e255a5ce0.webp"
+        },
+        {
+          "width": 1920,
+          "path": "images/spider-1920.444e785ae19d.webp"
+        },
+        {
+          "width": 2560,
+          "path": "images/spider-2560.d6331497a644.webp"
+        },
+        {
+          "width": 3840,
+          "path": "images/spider-3840.b978dbca9ea2.webp"
+        }
+      ],
+      "thumb": "images/spider-thumb.f74a8a5b2126.webp",
+      "original": "images/spider.9d91f958d289.original.webp"
+    }
   },
   {
     "id": "trifid",
@@ -33,7 +96,28 @@
     "author": "NASA/JPL-Caltech/UCLA",
     "licence": "Public domain",
     "sourceUrl": "https://images.nasa.gov/details/PIA17834",
-    "image": "../assets/cosmos/trifid.webp"
+    "image": {
+      "widths": [
+        {
+          "width": 1280,
+          "path": "images/trifid-1280.0bd67c8f3994.webp"
+        },
+        {
+          "width": 1920,
+          "path": "images/trifid-1920.72b897b83177.webp"
+        },
+        {
+          "width": 2560,
+          "path": "images/trifid-2560.49ad2e1dcc02.webp"
+        },
+        {
+          "width": 3840,
+          "path": "images/trifid-3840.1268b600268e.webp"
+        }
+      ],
+      "thumb": "images/trifid-thumb.78b102ddd623.webp",
+      "original": "images/trifid.12575c235333.original.webp"
+    }
   },
   {
     "id": "bison-swan-lake-flats",

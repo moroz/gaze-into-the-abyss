@@ -138,8 +138,7 @@ frame at 1 s as the thumbnail.
 ## 6. A media CDN
 
 **Goal:** media lives at its own origin, so changing images, videos or music never redeploys the site, and
-deploys stay small. Video and the 28 MB of music are on it now; the 6 MB of images in `src/assets/cosmos` are
-still built by Astro.
+deploys stay small. Every image, video and track is on it now, and a deploy is about 100 KB of HTML.
 
 **Built: CloudFront in front of a private S3 bucket**, on the default domain, in the `medic` AWS account
 (eu-central-1). Pulumi in `infra/` defines it; state lives in `s3://gaze-into-the-abyss-pulumi-state-eu-central-1/state`,
@@ -167,13 +166,10 @@ URL, an existing key is never overwritten, and a new upload is simply a new URL 
 aws-vault exec medic -- script/upload_media.sh videos media/drive-in.av1.mp4 media/drive-in.h264.mp4
 ```
 
-**Images lose Astro's processing once they're off-site.** Today `getImage` builds the 1280–3840 px WebP set
-at build time. Either:
-- keep the few images in the repo as now and move only video and music, which is the bulk; or
-- add a script that generates the widths and uploads them, with the data file listing the URLs. An image
-  CDN with on-the-fly resizing (Cloudflare Images, Bunny Optimizer) would also do.
-
-Start with the first option.
+**Images.** Off-site, they lose Astro's build-time resizing, so `script/publish_images.mjs` does it with sharp:
+WebP at 1280, 1920, 2560 and 3840 px (never wider than the original), a 240 × 150 thumbnail for `/credits`, and
+the original, all uploaded under hashed paths that land in the entry's `image`. The originals left
+`src/assets/cosmos` (they stay in git history, and on the CDN as `*.original.*`).
 
 **Wiring:**
 - Done: `src/scripts/media.ts` prefixes data paths with `PUBLIC_MEDIA_ORIGIN`, defaulting to the CloudFront

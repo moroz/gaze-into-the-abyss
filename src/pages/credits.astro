@@ -3,7 +3,6 @@ import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
 import { mediaUrl } from "../scripts/media"
 import { sentence } from "../scripts/sentence"
-import { Image } from "astro:assets"
 import Base from "../layouts/Base.astro"
 
 const backgrounds = (await getCollection("backgrounds")).sort(byPosition)
@@ -25,7 +24,7 @@ const tracks = (await getCollection("music")).sort(byPosition)
         <li>
           {data.video
             ? <video src={`${mediaUrl(data.video.h264)}#t=1`} muted playsinline preload="metadata" aria-hidden="true"></video>
-            : <Image src={data.image!} alt="" width={160} height={100} fit="cover" format="webp" />}
+            : <img src={mediaUrl(data.image!.thumb)} alt="" width="160" height="100" loading="lazy" decoding="async" />}
           <div>
             <a href={data.sourceUrl}>{data.title}</a>
             <span>{sentence(data.author)} {data.licenceUrl ? <a href={data.licenceUrl}>{data.licence}</a> : data.licence}.{data.video && data.licence.includes("BY-SA") && " This loop is shared under the same licence."}</span>

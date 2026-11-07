@@ -9,14 +9,20 @@ import { VIDEO_EFFECTS } from "./scripts/video-warp"
 // the warp effects a video draws from each time it shows (all five without it).
 const backgrounds = defineCollection({
   loader: file("src/data/backgrounds.json"),
-  schema: ({ image }) => z.object({
+  schema: z.object({
     position: z.number().int().positive(),
     title: z.string(),
     author: z.string(),
     licence: z.string(),
     licenceUrl: z.url().optional(),
     sourceUrl: z.url(),
-    image: image().optional(),
+    // Paths on the media CDN, made by script/publish_images.mjs: WebP widths for srcset, a /credits thumbnail and
+    // the original the set was made from.
+    image: z.object({
+      widths: z.array(z.object({ width: z.number().int().positive(), path: z.string() })).nonempty(),
+      thumb: z.string(),
+      original: z.string(),
+    }).optional(),
     video: z.object({ av1: z.string().endsWith(".av1.mp4"), h264: z.string().endsWith(".h264.mp4") }).optional(),
     overlay: z.enum(["calm", "psychedelic", "hue-cycle"]).optional(),
     effects: z.array(z.enum(VIDEO_EFFECTS)).nonempty().optional(),
