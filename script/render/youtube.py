@@ -118,6 +118,17 @@ def upload(video: Path, title: str, description: str, tags: list[str], yes: bool
     print(f"uploaded, private: https://studio.youtube.com/video/{response['id']}/edit", file=sys.stderr)
 
 
+def thumbnail(video_id: str, image: Path) -> None:
+    """Sets a custom thumbnail (a JPEG or PNG under 2 MB, 1280x720 ideally); YouTube allows it only on channels
+    verified by phone."""
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+
+    youtube = build("youtube", "v3", credentials=credentials())
+    youtube.thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(image))).execute()
+    print(f"thumbnail set: https://studio.youtube.com/video/{video_id}/edit", file=sys.stderr)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -129,12 +140,17 @@ def main() -> None:
     up.add_argument("--description", type=Path, required=True)
     up.add_argument("--tags", default="music for tripping,psychedelic,visuals,Dvořák,New World Symphony,4K")
     up.add_argument("--yes", action="store_true")
+    thumb = commands.add_parser("thumbnail")
+    thumb.add_argument("video_id")
+    thumb.add_argument("image", type=Path)
     args = parser.parse_args()
     if args.command == "describe":
         sys.stdout.write(describe())
     elif args.command == "login":
         credentials()
         print(f"signed in; token kept in {TOKEN}", file=sys.stderr)
+    elif args.command == "thumbnail":
+        thumbnail(args.video_id, args.image)
     else:
         upload(args.video, args.title, args.description.read_text(), args.tags.split(","), args.yes)
 
