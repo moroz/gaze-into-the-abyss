@@ -1,18 +1,15 @@
 ---
 import Base from "../layouts/Base.astro"
 import FullscreenToggle from "../components/FullscreenToggle.astro"
-import Slideshow from "../components/Slideshow.astro"
 import Soundtrack from "../components/Soundtrack.astro"
 import SourceLink from "../components/SourceLink.astro"
-import Trip from "../components/Trip.astro"
+import Stage from "../components/Stage.astro"
 ---
 
 <Base title="Gaze into the Abyss" description="Abyss gazing. Zen mode.">
   <main class="abyss">
     <h1 class="visually-hidden">Gaze into the Abyss</h1>
-    <Slideshow />
-    <Trip />
-    <div class="dawn" aria-hidden="true"></div>
+    <Stage />
     <Soundtrack />
     <FullscreenToggle />
     <SourceLink />
@@ -22,14 +19,6 @@ import Trip from "../components/Trip.astro"
 <script>
   import { fadeChromeWhenIdle, keepScreenAwake } from "../scripts/presence"
 
-  const VEIL_PATIENCE_MS = 7_000
-
-  const dawn = document.querySelector<HTMLElement>(".dawn")!
-  const lift = (): void => dawn.classList.add("is-lifting")
-  if (document.documentElement.dataset.firstImage) lift()
-  else document.addEventListener("abyss:first-image", lift, { once: true })
-  setTimeout(lift, VEIL_PATIENCE_MS)
-
   fadeChromeWhenIdle(document.querySelector<HTMLElement>(".abyss")!)
   keepScreenAwake()
 </script>
@@ -37,8 +26,4 @@ import Trip from "../components/Trip.astro"
 <style>
   .abyss { position: fixed; inset: 0; overflow: hidden; }
   .abyss:global(.is-idle) { cursor: none; }
-  .dawn { position: absolute; inset: 0; z-index: 1; background: #000000; pointer-events: none; }
-  .dawn:global(.is-lifting) { animation: lift 8s 1.5s cubic-bezier(.45, 0, .25, 1) forwards; }
-
-  @keyframes lift { from { opacity: 1; } to { opacity: 0; } }
 </style>

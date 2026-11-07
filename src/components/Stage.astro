@@ -1,0 +1,53 @@
+---
+// The whole picture, drawn in one WebGL 2 canvas by scripts/stage.ts: backgrounds, trip overlay, vignette and dawn.
+import { getCollection } from "astro:content"
+import { byPosition } from "../scripts/by-position"
+import { mediaUrl } from "../scripts/media"
+import type { SlideData } from "../scripts/slideshow"
+
+const entries = (await getCollection("backgrounds")).sort(byPosition)
+const slides: SlideData[] = entries.map(({ data }) => {
+  const credit = { title: data.title, author: data.author, licence: data.licence, licenceUrl: data.licenceUrl, sourceUrl: data.sourceUrl }
+  const overlay = data.overlay ?? (data.video ? "calm" : "psychedelic")
+  if (data.video) return { kind: "video", overlay, credit, effects: data.effects, distortion: data.distortion ?? 1, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) }
+  const widths = [...data.image!.widths].sort((a, b) => a.width - b.width).map(({ width, path }) => ({ width, url: mediaUrl(path) }))
+  return { kind: "image", overlay, credit, distortion: 1, widths }
+})
+
+// Without WebGL 2 the page shows the first image, still.
+const still = entries.find(({ data }) => data.image)!.data
+const stillWidths = still.image!.widths
+const stillSrc = mediaUrl((stillWidths.findLast(({ width }) => width <= 1920) ?? stillWidths[0]).path)
+const stillSrcset = stillWidths.map(({ width, path }) => `${mediaUrl(path)} ${width}w`).join(", ")
+const stillCredit = { title: still.title, author: still.author, licence: still.licence, licenceUrl: still.licenceUrl, sourceUrl: still.sourceUrl }
+---
+
+<canvas class="stage" aria-hidden="true"></canvas>
+<div class="footage" aria-hidden="true"></div>
+<img class="still" hidden src={stillSrc} srcset={stillSrcset} sizes="100vw" alt="" decoding="async" data-credit={JSON.stringify(stillCredit)} />
+<script type="application/json" id="slides" set:html={JSON.stringify(slides)} />
+
+<script>
+  import fragment from "../scripts/psychedelia.frag?raw"
+  import { runStage } from "../scripts/stage"
+
+  const canvas = document.querySelector<HTMLCanvasElement>(".stage")!
+  const slides = JSON.parse(document.getElementById("slides")!.textContent!)
+  const started = runStage({ canvas, pool: document.querySelector<HTMLElement>(".footage")!, slides, fragment })
+  if (!started) {
+    canvas.remove()
+    const still = document.querySelector<HTMLImageElement>(".still")!
+    still.hidden = false
+    document.dispatchEvent(new CustomEvent("abyss:background", { detail: JSON.parse(still.dataset.credit!) }))
+    document.dispatchEvent(new Event("abyss:first-image"))
+    document.documentElement.dataset.firstImage = "shown"
+  }
+</script>
+
+<style>
+  .stage, .still { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .still { object-fit: cover; filter: brightness(.8) saturate(1.3) contrast(1.05); }
+  /* The videos the stage reads frames from: in the page, so browsers keep decoding them, but out of sight. */
+  .footage { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+  .footage :global(video) { width: 1px; height: 1px; }
+</style>
