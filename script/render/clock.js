@@ -1,8 +1,8 @@
-// Injected before the page's own scripts: a clock that moves only when the renderer steps it, so every timer,
-// animation frame, CSS animation and video lands exactly on a frame of the recording.
+// Injected before the page's own scripts: a clock that moves only when the renderer steps it, so every timer and
+// animation frame lands exactly on a frame of the recording. The stage (src/scripts/stage.ts, in #render mode) does
+// the rest: it waits for loads and decodes each video frame in window.__abyss.beforeFrame.
 (() => {
   let now = 0
-  const realTimeout = window.setTimeout.bind(window)
   const realNow = Performance.prototype.now.bind(performance)
   const epoch = Date.now()
   performance.now = () => now
@@ -31,44 +31,16 @@
   }
   window.cancelAnimationFrame = (id) => frames.delete(id)
 
-  // A video "plays" on the clock: it stays paused in the browser and is seeked to its own time on every frame.
-  const media = HTMLMediaElement.prototype
-  const realPause = media.pause
-  const clocks = new Map()
-  Object.defineProperty(media, "paused", { get() { return !clocks.has(this) } })
-  media.play = function () {
-    if (!clocks.has(this)) {
-      clocks.set(this, this.__seconds ?? 0)
-      this.preload = "auto"
-      if (this.readyState === 0 && this.networkState !== HTMLMediaElement.NETWORK_LOADING) this.load()
-      const announce = () => {
-        this.dispatchEvent(new Event("canplaythrough"))
-        this.dispatchEvent(new Event("playing"))
-      }
-      if (this.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) queueMicrotask(announce)
-      else this.addEventListener("canplay", announce, { once: true })
-    }
-    return Promise.resolve()
+  // Lets promise chains a timer started run to their end, as they would between two real frames.
+  const settle = async () => {
+    for (let i = 0; i < 20; i++) await Promise.resolve()
   }
-  media.pause = function () {
-    if (!clocks.has(this)) return
-    this.__seconds = clocks.get(this)
-    clocks.delete(this)
-    realPause.call(this)
-    this.dispatchEvent(new Event("pause"))
-  }
-
-  const born = new WeakMap()
-  const settle = (video) => new Promise((resolve) => {
-    const done = () => resolve()
-    video.addEventListener("seeked", done, { once: true })
-    realTimeout(done, 2000)
-  })
 
   window.__clock = {
     now: () => now,
-    // Moves the clock on by ms: timers fall due in order, then one animation frame runs, then every CSS animation
-    // is set to its age and every video on screen is seeked to its time.
+    // Wall-clock time, for the renderer's own timings.
+    realNow,
+    // Moves the clock on by ms: timers fall due in order, the stage gets what it needs, then one animation frame runs.
     async step(ms) {
       const target = now + ms
       for (;;) {
@@ -80,34 +52,17 @@
         if (timer.every) timer.at += timer.every
         else timers.delete(id)
         try { timer.callback(...timer.args) } catch (error) { console.error(error) }
-        await Promise.resolve()
+        await settle()
       }
       now = target
-      for (const [video, seconds] of clocks) if (video.readyState > 0) clocks.set(video, seconds + ms / 1000)
-
-      const seeks = []
-      for (const [video, seconds] of clocks) {
-        if (!video.closest(".slide")?.matches(".is-active, .is-leaving") || !video.duration) continue
-        const at = seconds % video.duration
-        if (Math.abs(video.currentTime - at) < 1e-4) continue
-        video.currentTime = at
-        seeks.push(settle(video))
-      }
-      const seekStart = realNow()
-      await Promise.all(seeks)
-      const seekMs = realNow() - seekStart
-
+      await settle()
+      await window.__abyss?.beforeFrame()
+      await settle()
       const running = frames
       frames = new Map()
       for (const callback of running.values()) {
         try { callback(now) } catch (error) { console.error(error) }
       }
-      for (const animation of document.getAnimations()) {
-        if (!born.has(animation)) born.set(animation, now)
-        animation.pause()
-        animation.currentTime = now - born.get(animation)
-      }
-      return { seekMs, seeks: seeks.length }
     },
   }
 })()

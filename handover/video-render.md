@@ -1,13 +1,12 @@
 # Handover: rendering the trip as a 4K60 video for YouTube
 
-State on 2026-11-07, uncommitted in the working copy on top of `main` (`05f7209`). Nothing here has rendered a frame
-yet. Continue on the NVIDIA laptop.
+State on 2026-11-07, on the `video-render` branch. Continue on the NVIDIA laptop (RTX 4060 Laptop beside Intel Arc).
 
 ## Goal
 
 A "music for tripping" video for YouTube at 3840×2160, 60 fps, rendered from the site itself. **Visuals first: 30
 minutes** (108,000 frames). The music playlist is decided later and muxed in afterwards. Attribution goes in the
-video description, not on screen, so every control and caption is hidden in the render.
+video description, not on screen.
 
 ## Rights, already checked
 
@@ -24,62 +23,42 @@ The six tracks on the CDN come to 47:40 played once (6:04, 12:41, 14:39, 6:23, 6
 bagpipes. They are 96 kbps MP3s, which is too thin for YouTube: re-render them from `sources/` with
 `script/render_soundtrack.py` to WAV (it already makes `dry.wav` on the way; it needs a lossless output option).
 
-## Approach: offline and frame-exact, not screen capture
+## What was done
 
-Screen capture at 4K60 drops frames on any laptop GPU, and the shader work is heavy at full resolution. Instead, a
-headless Chrome runs the built site on a fake clock that moves exactly 1/60 s per frame. Each frame is captured as a
-PNG and piped into x264. A slow GPU only makes it take longer; the result is the same.
+**The site now draws everything in one WebGL 2 canvas** (`src/scripts/stage.ts`), on the site as well as for the
+render. Before, it was CSS-animated slides, `<video>` elements, a warp canvas per video and the overlay canvas,
+composited by the browser; recording that needed a screenshot per frame and a video seek per frame. The measurements
+that drove the change (4K, RTX 4060, headless Chrome):
 
-- **`script/render/clock.js`**, injected before the page's scripts, replaces `performance.now`, `Date.now`,
-  `setTimeout`/`setInterval` and `requestAnimationFrame`. `window.__clock.step(ms)` fires the timers that fall due in
-  order, runs one animation frame, and sets every CSS animation (`document.getAnimations()`) to its age on the fake
-  clock. Videos never really play. `play()` and `pause()` and the `paused` getter are faked, and every video on screen
-  (`.is-active`/`.is-leaving`) is seeked to its own time modulo its duration, waiting for `seeked`.
-- **`#render`** (new, in `src/scripts/shader-canvas.ts`) lifts the overlay's 75% scale, its one-megapixel cap and its
-  24 fps limit, so the trip draws every frame at full 4K. The video warp already draws at the device pixel ratio
-  (capped at 1.5), so at `deviceScaleFactor: 1` it is full size without a change.
-- **`script/render/bench.mjs`** serves as the benchmark and as the seed of the real renderer. It fast-forwards `SKIP`
-  seconds without capturing (the first ~10 s are the black opening), then captures `SECONDS_` seconds and prints
-  ms per frame for the step, the video seeks, the screenshot and the pipe to ffmpeg. It hides `.music`, `.hint`,
-  `.fullscreen-toggle` and `.source-link`.
+| per frame | before | now |
+| --- | --- | --- |
+| seeking the `<video>`s | 349 ms | none: frames decoded ahead into JPEGs |
+| getting the picture out | PNG screenshot ~540 ms, JPEG ~210 ms | readPixels of yuv420p, 21 ms |
+| moving it to ffmpeg | base64 over CDP | POST as a Blob, overlapped with the next frame (an ArrayBuffer body took 344 ms, a Blob 50 ms) |
+| encoding | x264 `slow` on the CPU | `hevc_nvenc`, ~90 fps at 4K on its own |
+| **total** | ~440 ms (2.3 fps) | ~40 ms (**24–26 fps**) |
 
-```bash
-pnpm install && pnpm build && pnpm preview --port 4321 &
-SKIP=60 SECONDS_=10 CHROME=/usr/bin/google-chrome \
-  node script/render/bench.mjs "http://localhost:4321/#seed=abyss&render" bench.mp4 vulkan   # or: gl, egl
-```
+- The stage reproduces what the stylesheet did: the CSS filter chains as colour matrices (Filter Effects spec values,
+  clamped between steps), the transitions' timing curves, bloom's zoom, blur (mipmap taps, approximate) and
+  brightness, the image drift (now numeric poses; one of the six pairs interpolates slightly differently from CSS's
+  matrix fallback), the trip's screen blend and breathing, the vignette's gradient and the dawn. A render at 20 s
+  matched the old screenshot render of the same seed almost exactly.
+- `slideshow.ts` keeps every random draw in its old order, so seeds replay the same backgrounds.
+- `#render` mode: `FrameVideo` (`render-frames.ts`) replaces `<video>`; loads are awaited before the clock moves, so
+  network speed cannot change the result; `__abyss.send()` reads the frame back and posts it.
+- GPU: Chrome only reaches the NVIDIA card with PRIME offload variables, and only through `gl`/`egl`; Vulkan gives no
+  WebGL 2 in headless Chrome. The renderer sets both and refuses any other GPU.
+- ffmpeg: Homebrew's has no NVENC, `sudo` needs a password, and a static build from GitHub was refused by the
+  permission classifier, so Debian's package is unpacked without root into `~/.local/opt/ffmpeg-debian/`.
 
-The last argument picks the ANGLE backend. The first thing it prints is the WebGL renderer: check it names the
-NVIDIA card, not SwiftShader or llvmpipe. On Linux with NVIDIA, `vulkan` or `egl` is the likely one.
+See the README's "Rendering a video" for usage.
 
-## What happened here (Iris Xe, 20 cores, 30 GB)
+## Open
 
-- `puppeteer-core` 24.10.0 added as a dev dependency; Chrome 154 is the system `google-chrome`.
-- The one sanity run (`vulkan`, `SKIP=12`, one second of capture) found **no WebGL 2** under `--use-angle=vulkan`, so
-  neither the overlay nor the video warp drew. Even so, **fast-forwarding 12 s took 248 s: 345 ms per step, with no
-  capture and no GL work**. At that rate, stepping alone takes about 10 hours for 30 minutes, so find where it goes
-  before anything else. The suspects are the per-frame video seeks (`step` awaits `seeked` for every video on screen,
-  fast-forward included) and the `page.evaluate` round trip per step. The run was stopped before it captured a
-  frame, and `gl` and `egl` were never tried. So there are no capture numbers yet. The shim does run against the page:
-  timers and slides advance, though whether correctly is unchecked.
-
-## Next
-
-1. Get a renderer line naming the GPU on the laptop (try `egl` and `gl` if `vulkan` says "no WebGL 2"). Time one
-   step with and without the seeks. Then run the 10 s benchmark and look at `bench.mp4`. Check that the
-   frame moves smoothly, that the videos play at the right speed, and that the dawn lifts and slides change.
-2. Fix what the shim gets wrong. The likely spots:
-   - **Videos loading while paused.** The shim sets `preload="auto"` and turns `canplay` into `canplaythrough`. If a
-     video never loads, the slideshow skips it after 60 fake seconds.
-   - **Seeks.** Each frame seeks from a keyframe. If `seek` dominates, try advancing small steps, or extract the
-     loops' frames with ffmpeg up front.
-   - **The first frame of each CSS animation.** Its age starts the step it is first seen, so it may be one frame late.
-3. From the numbers, estimate the full 30 minutes. The likely bottleneck is the PNG capture (CPU), not the GPU.
-4. Turn the benchmark into the renderer:
-   - Render in one-minute segments, each its own `.mp4`, so a crash resumes. Resuming fast-forwards at the same 1/60 s
-     steps, because the shader's clock integrates its pace and clamps long steps.
-   - Join them with the concat demuxer (`-c copy`).
-   - Fade to black at the end.
-   - Fix the seed (`#seed=abyss` so far) so it can be re-rendered.
-   - Encoder settings: x264 `-preset slow -crf 14`, `yuv420p`, BT.709 tags. Expect about 15–20 GB for 30 minutes.
-5. Commit with `jj commit`: the `#render` option, `puppeteer-core`, `script/render/` and a README section on rendering.
+1. **Black flashes on the site**, reported while watching it in a browser. One cause found and fixed: a `<video>`
+   wrapping round its loop briefly has no frame, and the stage then dropped the layer to black; it now shows the
+   warp's last frame. A 90 s headless check (screenshots every 100 ms) found no flash afterwards, but the report came
+   again; which browser and what was on screen are not known yet.
+2. The site on phones is untested since the rewrite: canvas at device pixel ratio up to 1.5, one extra full-screen
+   pass per background compared with before.
+3. Music: the lossless re-render above, then mux: `ffmpeg -i video.mp4 -i music.wav -c:v copy -c:a aac -b:a 384k`.
