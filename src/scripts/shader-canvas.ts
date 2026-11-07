@@ -14,7 +14,10 @@ const TAU = 2 * Math.PI
 
 export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: (seconds: number) => SceneMoment): void {
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  const chosen = Number(new URLSearchParams(location.hash.slice(1)).get("t"))
+  const options = new URLSearchParams(location.hash.slice(1))
+  const chosen = Number(options.get("t"))
+  // #render, for recording a video: every frame at full resolution.
+  const rendering = options.has("render")
   const loaded = performance.now()
   const started = loaded - (chosen > 0 ? chosen * 1000 : randomStream("shader time").next() * RANDOM_START_MS)
   let gl: WebGLRenderingContext
@@ -85,15 +88,16 @@ export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: 
       return true
     }
     const elapsed = now - drawnAt
+    if (rendering) return true
     if (elapsed < FRAME_INTERVAL_MS - 2) return false
     drawnAt = now - (elapsed % FRAME_INTERVAL_MS)
     return true
   }
 
   const render = (now: number): void => {
-    const scale = RESOLUTION_SCALE * (window.devicePixelRatio || 1)
+    const scale = (rendering ? 1 : RESOLUTION_SCALE) * (window.devicePixelRatio || 1)
     const wanted = canvas.clientWidth * canvas.clientHeight * scale * scale
-    const capped = scale * Math.min(1, Math.sqrt(MAX_PIXELS / Math.max(1, wanted)))
+    const capped = rendering ? scale : scale * Math.min(1, Math.sqrt(MAX_PIXELS / Math.max(1, wanted)))
     const width = Math.max(1, Math.round(canvas.clientWidth * capped))
     const height = Math.max(1, Math.round(canvas.clientHeight * capped))
     if (canvas.width !== width || canvas.height !== height) {
