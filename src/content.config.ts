@@ -26,6 +26,8 @@ const backgrounds = defineCollection({
     video: z.object({ av1: z.string().endsWith(".av1.mp4"), h264: z.string().endsWith(".h264.mp4") }).optional(),
     overlay: z.enum(["calm", "psychedelic", "hue-cycle"]).optional(),
     effects: z.array(z.enum(VIDEO_EFFECTS)).nonempty().optional(),
+    // How hard a video's footage is bent: 1 is the full warp, lower leaves it truer (a landscape), higher bends more.
+    distortion: z.number().min(0).max(2).optional(),
   }).refine((entry) => (entry.image === undefined) !== (entry.video === undefined), "needs exactly one of image and video"),
 })
 

@@ -10,6 +10,7 @@ const RESOLUTION_SCALE = 0.75
 const MAX_PIXELS = 1_000_000
 const FRAME_INTERVAL_MS = 1000 / 24
 const RANDOM_START_MS = 600_000
+const TAU = 2 * Math.PI
 
 export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: (seconds: number) => SceneMoment): void {
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -25,6 +26,14 @@ export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: 
   let transition: WebGLUniformLocation | null
   let frame = 0
   let drawnAt: number | undefined
+  // The scenes' clock runs at a pace that wanders between about half and one and a half times over minutes, so
+  // the trip does not keep one tempo. It is seeded like everything else.
+  const { next: paceRandom } = randomStream("overlay pace")
+  const paceOffsets = [paceRandom() * TAU, paceRandom() * TAU]
+  const pace = (seconds: number): number =>
+    1 + 0.3 * Math.sin((seconds * TAU) / 170 + paceOffsets[0]) + 0.2 * Math.sin((seconds * TAU) / 61 + paceOffsets[1])
+  let phase = (loaded - started) / 1000
+  let tickedAt = loaded
 
   const start = (): boolean => {
     const context = canvas.getContext("webgl", { antialias: false, premultipliedAlpha: false })
@@ -93,7 +102,9 @@ export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: 
     }
     gl.viewport(0, 0, width, height)
     gl.uniform2f(resolution, width, height)
-    gl.uniform1f(time, (now - started) / 1000)
+    phase += (Math.min(now - tickedAt, 250) / 1000) * pace((now - loaded) / 1000)
+    tickedAt = now
+    gl.uniform1f(time, phase)
     const moment = sceneAt((now - loaded) / 1000)
     gl.uniform1f(fromScene, moment.from)
     gl.uniform1f(toScene, moment.to)

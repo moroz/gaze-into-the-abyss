@@ -84,6 +84,11 @@ const announce = (slide: HTMLElement): void => {
 export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]): Promise<void> {
   const { between, next: random, pick, shuffledForever } = randomStream("slides")
   const next = shuffledForever(slides)
+  // Each showing gets its own pace, which scales the slide's colour cycles and its video's warp, and a video its own
+  // strength of distortion around the entry's setting.
+  const paces = randomStream("background pace")
+  const distortions = randomStream("distortion")
+
   // Each time a video comes on screen it gets one effect, from its own list where it has one (data-effects);
   // #effect=<name> holds every video to that one.
   const effects = randomStream("video effects")
@@ -113,12 +118,15 @@ export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]
     arriving.dataset.transition = transition
     arriving.style.setProperty("--from", from)
     arriving.style.setProperty("--to", to)
+    arriving.style.setProperty("--pace", paces.between(0.6, 1.6).toFixed(2))
     arriving.style.setProperty("--drift-ms", `${holdMs + TRANSITION_MS[transition]}ms`)
     void arriving.offsetWidth
     arriving.classList.add("is-active")
     const picture = pictureOf(arriving)
     if (picture instanceof HTMLVideoElement) {
       picture.dataset.effect = effectFor(picture)
+      picture.dataset.strength = (Number(picture.dataset.distortion ?? 1) * distortions.between(0.6, 1.25)).toFixed(2)
+      picture.dataset.pace = arriving.style.getPropertyValue("--pace")
       picture.play().catch(() => {})
     }
     announce(arriving)

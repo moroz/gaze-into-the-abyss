@@ -34,6 +34,7 @@ uniform int effect;
 uniform float newest;
 uniform float layers;
 uniform float echoMix;
+uniform float strength;
 in vec2 uv;
 out vec4 colour;
 const float TAU = 6.2831853;
@@ -72,9 +73,9 @@ void main() {
   vec2 flow = vec2(
     sin(point.y * 6. + t * 1.3) + sin(point.y * 13. + point.x * 4. - t * .7),
     cos(point.x * 5. - t) + sin(point.x * 11. + point.y * 3. + t * .9));
-  point += flow * .006;
+  point += flow * .006 * strength;
   vec2 fromCentre = point - .5;
-  point = .5 + fromCentre * (1. - .05 * sin(t * .8) * length(fromCentre));
+  point = .5 + fromCentre * (1. - .05 * strength * sin(t * .8) * length(fromCentre));
   // Inset a little so the displacement never pulls the clamped edge into view.
   vec2 at = cover(.5 + (point - .5) * .97);
   float layer = 0.;
@@ -82,7 +83,7 @@ void main() {
     float delay = (1. - uv.y) * .75 + .25 * (.5 + .5 * sin(uv.x * TAU + time * .3));
     layer = mod(newest - floor(delay * (layers - 1.)), layers);
   }
-  float split = .0025 + .0015 * sin(t * 1.7);
+  float split = (.0025 + .0015 * sin(t * 1.7)) * strength;
   vec3 c = vec3(sampleAt(at + vec2(split, 0.), layer).r, sampleAt(at, layer).g, sampleAt(at - vec2(split, 0.), layer).b);
   if (effect == 4) {
     float brightness = dot(c, vec3(.299, .587, .114));
@@ -154,6 +155,9 @@ export function warpVideo(video: HTMLVideoElement, firstCanvas: HTMLCanvasElemen
   let shownEffect: string | undefined
   let fresh = true
   let frame = 0
+  // The warp's own clock, advanced at the showing's pace (video.dataset.pace).
+  let phase = 0
+  let tickedAt: number | undefined
 
   const onScreen = (): boolean => !!video.closest(".slide")?.matches(".is-active, .is-leaving")
 
@@ -191,7 +195,7 @@ export function warpVideo(video: HTMLVideoElement, firstCanvas: HTMLCanvasElemen
     if (!context) return false
     gl = context
     canvas.addEventListener("webglcontextlost", giveUp)
-    warp = build(gl, WARP, ["frame", "history", "previous", "time", "canvasSize", "videoSize", "effect", "newest", "layers", "echoMix"])
+    warp = build(gl, WARP, ["frame", "history", "previous", "time", "canvasSize", "videoSize", "effect", "newest", "layers", "echoMix", "strength"])
     copy = build(gl, COPY, ["source"])
     gl.bindVertexArray(gl.createVertexArray())
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
@@ -301,7 +305,10 @@ export function warpVideo(video: HTMLVideoElement, firstCanvas: HTMLCanvasElemen
     if (VIDEO_EFFECTS[effect] === "slit-scan") keepHistory(g, now)
 
     g.useProgram(warp.program)
-    g.uniform1f(warp.uniforms.time, now / 1000)
+    phase += (Math.min(now - (tickedAt ?? now), 100) / 1000) * Number(video.dataset.pace || 1)
+    tickedAt = now
+    g.uniform1f(warp.uniforms.time, phase)
+    g.uniform1f(warp.uniforms.strength, Number(video.dataset.strength || 1))
     g.uniform2f(warp.uniforms.canvasSize, width, height)
     g.uniform2f(warp.uniforms.videoSize, video.videoWidth, video.videoHeight)
     g.uniform1i(warp.uniforms.effect, effect)

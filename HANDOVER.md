@@ -120,7 +120,11 @@ the slideshow picks one effect on top, from the seeded `video effects` stream (`
 - `thermal`: brightness mapped onto a cycling neon palette.
 
 An entry's `effects` narrows the draw to the effects that suit that clip: the medusa is always a kaleidoscope, the
-bison in snow always thermal.
+bison in snow always thermal. Its `distortion` scales the base warp (ripple, lens and colour split): 0.35 for the
+aurora, about 0.5 for the desert and wetland landscapes, 1.3–1.4 for the jellies. Each showing multiplies it by a
+random 0.6–1.25 and gets a random pace of 0.6–1.6, which scales the slide's hue, oversaturation and hue-cycle
+animations and the warp's clock (streams `distortion` and `background pace`). The overlay's own clock wanders
+between about 0.5× and 1.5× (stream `overlay pace`). The `fractal` scene was dropped as the dullest of the five.
 
 The `<video crossorigin>` stays underneath; the canvas removes itself if WebGL 2 or its context is unavailable.
 (Without CORS the video itself fails to load, because of `crossorigin`, and the slideshow skips it.) Only a video on

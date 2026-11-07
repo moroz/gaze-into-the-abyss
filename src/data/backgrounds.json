@@ -182,7 +182,8 @@
     "video": {
       "av1": "videos/joshua-tree-sunset.5ca5e75e3d53.av1.mp4",
       "h264": "videos/joshua-tree-sunset.2ea1830a18ea.h264.mp4"
-    }
+    },
+    "distortion": 0.5
   },
   {
     "id": "steens-mountain-clouds",
@@ -194,7 +195,8 @@
     "video": {
       "av1": "videos/steens-mountain-clouds.6d91e3cdcf11.av1.mp4",
       "h264": "videos/steens-mountain-clouds.f8c7a5d77bc3.h264.mp4"
-    }
+    },
+    "distortion": 0.5
   },
   {
     "id": "psychedelic-medusa",
@@ -209,7 +211,8 @@
     },
     "effects": [
       "kaleidoscope"
-    ]
+    ],
+    "distortion": 1.3
   },
   {
     "id": "bloodybelly-comb-jelly",
@@ -223,7 +226,8 @@
       "av1": "videos/bloodybelly-comb-jelly.a0b2ee59a012.av1.mp4",
       "h264": "videos/bloodybelly-comb-jelly.e57944be681a.h264.mp4"
     },
-    "overlay": "hue-cycle"
+    "overlay": "hue-cycle",
+    "distortion": 1.4
   },
   {
     "id": "kilauea-lava-lake",
@@ -236,7 +240,8 @@
     "video": {
       "av1": "videos/kilauea-lava-lake.10977f101f43.av1.mp4",
       "h264": "videos/kilauea-lava-lake.43141fc9458f.h264.mp4"
-    }
+    },
+    "distortion": 0.7
   },
   {
     "id": "aurora-australis-iss",
@@ -248,7 +253,8 @@
     "video": {
       "av1": "videos/aurora-australis-iss.a532339d4c6a.av1.mp4",
       "h264": "videos/aurora-australis-iss.c7728e8b3325.h264.mp4"
-    }
+    },
+    "distortion": 0.35
   },
   {
     "id": "sandhill-crane-seedskadee",
@@ -272,7 +278,8 @@
     "video": {
       "av1": "videos/cosumnes-river-cranes.a76b3b288938.av1.mp4",
       "h264": "videos/cosumnes-river-cranes.2288fd8a4745.h264.mp4"
-    }
+    },
+    "distortion": 0.5
   },
   {
     "id": "elk-grazing-snow",
@@ -284,6 +291,7 @@
     "video": {
       "av1": "videos/elk-grazing-snow.d739dbde6ff3.av1.mp4",
       "h264": "videos/elk-grazing-snow.8192de9839b2.h264.mp4"
-    }
+    },
+    "distortion": 0.8
   }
 ]

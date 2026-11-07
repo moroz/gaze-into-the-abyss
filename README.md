@@ -15,10 +15,10 @@ pnpm dev
   `src/data/backgrounds.json`. Each image comes in a responsive set of widths. They play in a fresh random order on every visit, each for a random
   stretch, changing by a crossfade, a dip through black, a bloom or a slow dissolve; the one on screen is credited
   beside the music.
-- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with five scenes over the imagery: a liquid
+- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with four scenes over the imagery: a liquid
   kaleidoscope (`liquid`), a Kali-set nebula folded into eight mirrors (`nebula`), a three-mirror kaleidoscope that
-  tiles the screen (`lattice`), the Mandelbrot boundary with its Julia sets in six mirrors (`fractal`), and two
-  drifting sets of rings interfering (`moire`).
+  tiles the screen (`lattice`), and two drifting sets of rings interfering (`moire`). Their clock runs at a pace that
+  wanders between about half and one and a half times over minutes.
   `src/scripts/scene-schedule.ts` plays them in random order for random lengths, changing by a crossfade, a bloom from
   the centre, an ink-like dissolve or a petal wipe.
 - **Opening**: everything starts in total blackness, which lifts once the first background has loaded, or after 7 s.
@@ -56,7 +56,9 @@ aws-vault exec medic -- script/upload_media.sh videos media/NAME.av1.mp4 media/N
 
 A video's `overlay` is `calm` (breathing oversaturation, the default), `psychedelic` (the slow hue drift) or
 `hue-cycle` (once round the colour wheel every 12 s). Its optional `effects` lists the warp effects that suit it,
-e.g. `["kaleidoscope"]`; without it, each showing draws from all five. The slideshow
+e.g. `["kaleidoscope"]`; without it, each showing draws from all five. Its optional `distortion` (default 1) sets how
+hard the footage is bent: lower for a landscape that should stay true, higher for a jelly. Each showing varies it a
+little, and gives the slide its own pace for every colour cycle and warp. The slideshow
 and the credits page pick everything up from the data file.
 
 ## Changing the music
