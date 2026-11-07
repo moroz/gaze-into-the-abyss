@@ -36,6 +36,8 @@ DRIVE = 3.0
 # The reverb mix peaks over twice full scale; it is turned down before it is written as 16-bit samples and
 # brought back up by finish().
 MIX_HEADROOM = 0.25
+# A slowed recording is turned down by this before it is written as 16-bit samples (see stretched()).
+STRETCH_HEADROOM = 0.5
 # Wikimedia refuses downloads that do not say who is asking.
 USER_AGENT = "gaze-into-the-abyss soundtrack renderer (https://github.com/moroz/gaze-into-the-abyss)"
 
@@ -190,9 +192,14 @@ def synthesised(piece: Piece, source: Path, work: Path) -> float:
 
 def stretched(piece: Piece, source: Path, work: Path) -> float:
     """Slow a recording into dry.wav, keeping its pitch, and return its length in seconds."""
+    # Stretching overshoots the source's peaks (a recording peaking at 0.93 comes out at 1.1), and written as 16-bit
+    # those overshoots were flattened, each one a click that saturate() then drove harder. Half the level leaves room;
+    # saturate() normalises it again.
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source), "-ac", "2",
-                    "-af", f"aresample={RATE},atempo={piece.slowdown}", "-c:a", "pcm_s16le", str(work / "dry.wav")],
-                   check=True)
+                    "-af", f"aresample={RATE},atempo={piece.slowdown},volume={STRETCH_HEADROOM}", "-c:a", "pcm_s16le",
+                    str(work / "dry.wav")], check=True)
+    if np.abs(read_wav(work / "dry.wav")).max() >= 32766 / 32767:
+        raise SystemExit(f"{source.name}: the slowed recording clips; lower STRETCH_HEADROOM")
     with wave.open(str(work / "dry.wav")) as file:
         return file.getnframes() / RATE
 
@@ -203,8 +210,9 @@ def render(piece: Piece, work: Path) -> None:
     write_wav(work / "dry.wav", saturate(read_wav(work / "dry.wav")))
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "dry.wav"),
                     "-i", str(work / "ir.wav"), "-filter_complex",
-                    "[0:a]asplit[dry][send];[send][1:a]afir=dry=10:wet=10[wet];[dry]volume=0.4[quiet];"
-                    f"[quiet][wet]amix=inputs=2:weights='1 1.0':normalize=0,volume={MIX_HEADROOM},apad=pad_dur=12[out]",
+                    # Padded before the reverb, not after: afir stops when its input does, which cut the tail dead.
+                    "[0:a]apad=pad_dur=12,asplit[dry][send];[send][1:a]afir=dry=10:wet=10[wet];[dry]volume=0.4[quiet];"
+                    f"[quiet][wet]amix=inputs=2:weights='1 1.0':normalize=0,volume={MIX_HEADROOM}[out]",
                     "-map", "[out]", str(work / "wet.wav")], check=True)
     wet = read_wav(work / "wet.wav")
     if np.abs(wet).max() >= 32766 / 32767:
