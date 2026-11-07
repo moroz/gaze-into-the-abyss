@@ -92,10 +92,21 @@ const encoder = (path, fadeOutAt) => {
 // Serves dist/ and the frames, and takes each rendered frame on POST /frame.
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".mp3": "audio/mpeg", ".woff2": "font/woff2", ".txt": "text/plain" }
 let sink
+// Anything that went wrong in the page or with a frame; the next step throws it, so a broken stage cannot go on
+// encoding a frozen or shifted picture.
+let failure
 const server = createServer((request, response) => {
   if (request.method === "POST" && request.url === "/frame") {
     if (!sink) {
       response.writeHead(409).end()
+      return
+    }
+    // Checked before a byte reaches ffmpeg: a frame of the wrong size would shift every frame after it.
+    const expected = (WIDTH * HEIGHT * 3) / 2
+    if (Number(request.headers["content-length"]) !== expected) {
+      failure ??= new Error(`frame of ${request.headers["content-length"]} bytes, expected ${expected}`)
+      request.resume()
+      response.writeHead(400).end()
       return
     }
     const into = sink
@@ -108,8 +119,7 @@ const server = createServer((request, response) => {
       }
     })
     request.on("end", () => {
-      const expected = (WIDTH * HEIGHT * 3) / 2
-      if (bytes !== expected) console.error(`frame of ${bytes} bytes, expected ${expected}`)
+      if (bytes !== expected) failure ??= new Error(`frame of ${bytes} bytes, expected ${expected}`)
       response.writeHead(bytes === expected ? 204 : 400).end()
     })
     return
@@ -146,7 +156,10 @@ const open = async () => {
   })
   page = await browser.newPage()
   page.on("console", (message) => { if (["error", "warn"].includes(message.type())) console.error("page:", message.text()) })
-  page.on("pageerror", (error) => console.error("page error:", error.message))
+  page.on("pageerror", (error) => {
+    console.error("page error:", error.message)
+    failure ??= error
+  })
   await page.setViewport({ width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 })
   await page.evaluateOnNewDocument(readFileSync(join(import.meta.dirname, "clock.js"), "utf8"))
   await page.goto(`http://127.0.0.1:${PORT}/#seed=${encodeURIComponent(options.seed)}&render=/render-frames`, { waitUntil: "load" })
@@ -154,7 +167,11 @@ const open = async () => {
   const renderer = await page.evaluate(() => window.__abyss.renderer())
   log(`renderer: ${renderer}`)
   if (!/nvidia/i.test(renderer) && !options["any-gpu"]) throw new Error("not rendering on the NVIDIA GPU (pass --any-gpu to allow it)")
-  page.on("error", (error) => console.error("page crashed:", error.message))
+  page.on("error", (error) => {
+    console.error("page crashed:", error.message)
+    failure ??= error
+  })
+  failure = undefined
   frame = 0
 }
 
@@ -168,7 +185,10 @@ const step = (capture) => page.evaluate(async (ms, capture, collect) => {
   const stepped = window.__clock.realNow()
   const [read, post] = capture ? await window.__abyss.send("/frame") : [0, 0]
   return [stepped - started, read, post]
-}, STEP_MS, capture, capture && frame % GC_EVERY === 0).finally(() => frame++)
+}, STEP_MS, capture, capture && frame % GC_EVERY === 0).then((timings) => {
+  if (failure) throw failure
+  return timings
+}).finally(() => frame++)
 
 const fastForward = async (seconds) => {
   if (seconds <= 0) return
@@ -220,6 +240,18 @@ if (options.clip) {
   mkdirSync(segments, { recursive: true })
   const name = (index) => join(segments, `segment-${String(index).padStart(3, "0")}.mp4`)
   const count = Math.ceil((minutes * 60) / SEGMENT_SECONDS)
+  // Segments only resume into the run that made them: another seed, size, rate or length (the last segment's fade)
+  // would not join up.
+  const params = JSON.stringify({ seed: options.seed, size: options.size, fps: FPS, minutes, fade: options.fade, encoder: options.encoder, quality: options.quality })
+  const paramsPath = join(segments, "params.json")
+  const rendered = readdirSync(segments).some((file) => file.endsWith(".mp4"))
+  if (existsSync(paramsPath) && readFileSync(paramsPath, "utf8") !== params) {
+    throw new Error(`${segments} holds a render with other settings (${readFileSync(paramsPath, "utf8")}); use another <out-dir>`)
+  }
+  if (!existsSync(paramsPath)) {
+    if (rendered) log(`no params.json beside the rendered segments; taking them as this run's`)
+    writeFileSync(paramsPath, params)
+  }
   // A crash (the GPU process lost to a suspend, say) relaunches Chrome and resumes at the first missing segment.
   const ATTEMPTS = 5
   for (let attempt = 1; ; attempt++) {
