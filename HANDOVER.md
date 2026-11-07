@@ -106,9 +106,22 @@ The trip overlay always runs at full strength. Instead, each video's `overlay` f
 
 The hue drift now runs on each picture from one shared `--hue-delay`, so it stays in step across slides.
 
-Each video also draws through a WebGL canvas (`src/scripts/video-warp.ts`) that bends the footage itself: a slow
-layered ripple, a breathing swell from the centre, and a red–blue chromatic split. The `<video crossorigin>` stays
-underneath; the canvas removes itself if WebGL, its context or the frames are unavailable.
+Each video also draws through a WebGL 2 canvas (`src/scripts/video-warp.ts`) that bends the footage itself: a slow
+layered ripple, a breathing swell from the centre, and a red–blue chromatic split. Each time a video comes on screen
+the slideshow picks one effect on top, from the seeded `video effects` stream (`#effect=` forces one):
+
+- `ripple`: the base warp alone.
+- `kaleidoscope`: the footage folded into six mirrored wedges that slowly turn.
+- `slit-scan`: each row a slightly different moment, from 32 frames of history at 384×216 (about 1.5 s, 10 MB of
+  video memory, allocated the first time it is used). It shows on moving footage; on a still time-lapse it is
+  close to `ripple`.
+- `echo`: each frame mixed 14% into the last, which is zoomed, turned and hue-shifted, so motion leaves rainbow
+  afterimages. Two frame buffers at canvas size.
+- `thermal`: brightness mapped onto a cycling neon palette.
+
+The `<video crossorigin>` stays underneath; the canvas removes itself if WebGL 2, its context or the frames are
+unavailable. The candidates were tried out first in a demo page (Abyss Effect Lab) before these five were chosen,
+alongside the `moire` overlay scene.
 
 ## 5. Credits beside the music
 

@@ -1,4 +1,5 @@
 import { randomStream } from "./random"
+import { VIDEO_EFFECTS, type VideoEffect } from "./video-warp"
 
 const HOLD_MS: [number, number] = [18_000, 32_000]
 const FIRST_IMAGE_PATIENCE_MS = 6_000
@@ -79,6 +80,10 @@ const announce = (slide: HTMLElement): void => {
 export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]): Promise<void> {
   const { between, next: random, pick, shuffledForever } = randomStream("slides")
   const next = shuffledForever(slides)
+  // Each time a video comes on screen it gets one effect; #effect=<name> holds every video to that one.
+  const effects = randomStream("video effects")
+  const chosenEffect = new URLSearchParams(location.hash.slice(1)).get("effect") as VideoEffect | null
+  const effectFor = (): VideoEffect => (chosenEffect && VIDEO_EFFECTS.includes(chosenEffect) ? chosenEffect : effects.pick(VIDEO_EFFECTS))
   let current: HTMLElement | undefined
 
   container.style.setProperty("--hue-delay", `-${random() * 180}s`)
@@ -103,7 +108,10 @@ export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]
     void arriving.offsetWidth
     arriving.classList.add("is-active")
     const picture = pictureOf(arriving)
-    if (picture instanceof HTMLVideoElement) picture.play().catch(() => {})
+    if (picture instanceof HTMLVideoElement) {
+      picture.dataset.effect = effectFor()
+      picture.play().catch(() => {})
+    }
     announce(arriving)
     current = arriving
   }

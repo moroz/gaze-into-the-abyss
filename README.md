@@ -15,9 +15,10 @@ pnpm dev
   responsive set of sizes for each image. They play in a fresh random order on every visit, each for a random
   stretch, changing by a crossfade, a dip through black, a bloom or a slow dissolve; the one on screen is credited
   beside the music.
-- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with four scenes over the imagery: a liquid
+- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with five scenes over the imagery: a liquid
   kaleidoscope (`liquid`), a Kali-set nebula folded into eight mirrors (`nebula`), a three-mirror kaleidoscope that
-  tiles the screen (`lattice`), and the Mandelbrot boundary with its Julia sets in six mirrors (`fractal`).
+  tiles the screen (`lattice`), the Mandelbrot boundary with its Julia sets in six mirrors (`fractal`), and two
+  drifting sets of rings interfering (`moire`).
   `src/scripts/scene-schedule.ts` plays them in random order for random lengths, changing by a crossfade, a bloom from
   the centre, an ink-like dissolve or a petal wipe.
 - **Opening**: everything starts in total blackness, which lifts once the first image has loaded.
@@ -28,6 +29,7 @@ pnpm dev
   transitions, the music shuffle) comes from that seed, and without one the page picks a fresh seed and logs it to the
   console. `#scene=<name>` opens on that visual scene, `#t=<seconds>` sets the moment within the scenes' animation, and
   `#track=<id>` starts the music on that `music.json` entry, e.g. `/#seed=abyss&scene=liquid&track=new-world-finale`.
+  `#effect=<name>` holds every video to one effect: `ripple`, `kaleidoscope`, `slit-scan`, `echo` or `thermal`.
 
 ## Adding an image or a video
 
