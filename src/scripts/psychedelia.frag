@@ -8,7 +8,6 @@ uniform float transition;
 const float TAU = 6.2831853;
 // Exposure for the overlay: lifts the faint filaments a lot and the already bright scenes only a little.
 const float EXPOSURE = 2.4;
-const float FRACTAL_ITERATIONS = 128.0;
 
 vec3 spectrum(float t) { return 0.5 + 0.5 * cos(TAU * (t + vec3(0.0, 0.33, 0.67))); }
 
@@ -89,53 +88,6 @@ vec3 mirrorLattice(vec2 uv, float t) {
   return spectrum(field * 1.3 - length(warp) + t * 0.02 + 0.4) * smoothstep(0.2, 0.8, field);
 }
 
-vec2 complexMultiply(vec2 a, vec2 b) { return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x); }
-
-// Distance from c to the Mandelbrot set's boundary by the derivative of the orbit; negative inside the set.
-float mandelbrotDistance(vec2 c) {
-  vec2 z = vec2(0.0);
-  vec2 dz = vec2(0.0);
-  for (float n = 0.0; n < FRACTAL_ITERATIONS; n++) {
-    dz = 2.0 * complexMultiply(z, dz) + vec2(1.0, 0.0);
-    z = complexMultiply(z, z) + c;
-    if (dot(z, z) > 1024.0) return 0.5 * length(z) * log(length(z)) / length(dz);
-  }
-  return -1.0;
-}
-
-// The same for the Julia set of c, measured at z.
-float juliaDistance(vec2 z, vec2 c) {
-  vec2 dz = vec2(1.0, 0.0);
-  for (float n = 0.0; n < FRACTAL_ITERATIONS; n++) {
-    dz = 2.0 * complexMultiply(z, dz);
-    z = complexMultiply(z, z) + c;
-    if (dot(z, z) > 1024.0) return 0.5 * length(z) * log(length(z)) / length(dz);
-  }
-  return -1.0;
-}
-
-// A boundary drawn by its distance in screen pixels, so it stays a crisp line with a halo at any render resolution.
-float boundaryGlow(float distance, float pixel) {
-  if (distance < 0.0) return 0.0;
-  float pixels = distance / pixel;
-  return exp(-pixels * 0.9) + 0.12 * exp(-pixels * 0.1);
-}
-
-// Six mirrors over a window travelling along the Mandelbrot set's edge, with the Julia set of the point it is passing.
-vec3 fractalKaleidoscope(vec2 uv, float t) {
-  float wedge = TAU / 6.0;
-  float angle = abs(mod(atan(uv.y, uv.x) + t * 0.025, wedge) - 0.5 * wedge);
-  vec2 p = vec2(cos(angle), sin(angle)) * length(uv);
-  float along = 2.0 + 0.8 * sin(t * 0.011);
-  vec2 edge = 0.5 * vec2(cos(along), sin(along)) - 0.25 * vec2(cos(2.0 * along), sin(2.0 * along));
-  float pixel = 1.0 / min(resolution.x, resolution.y);
-  float window = 0.16 * (1.0 + 0.25 * sin(t * 0.037));
-  float mandelbrot = boundaryGlow(mandelbrotDistance(edge + rotation(t * 0.02) * p * window), window * pixel);
-  float juliaScale = 1.5;
-  float julia = boundaryGlow(juliaDistance(rotation(-t * 0.015) * p * juliaScale, edge), juliaScale * pixel);
-  return (spectrum(t * 0.02 + 0.1 * length(p)) * mandelbrot + spectrum(t * 0.02 + 0.45 - 0.1 * length(p)) * julia * 0.8) * 0.55;
-}
-
 // Two drifting sets of rings interfere, as in op art or a screen door seen through another.
 vec3 moireRings(vec2 uv, float t) {
   vec2 a = 0.3 * vec2(sin(t * 0.031), cos(t * 0.023));
@@ -149,7 +101,6 @@ vec3 scene(float index, vec2 uv) {
   if (index < 0.5) return liquidKaleidoscope(uv, time);
   if (index < 1.5) return kaliNebula(uv, time);
   if (index < 2.5) return mirrorLattice(uv, time);
-  if (index < 3.5) return fractalKaleidoscope(uv, time);
   return moireRings(uv, time);
 }
 

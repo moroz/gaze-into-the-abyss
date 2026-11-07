@@ -1,6 +1,6 @@
 import { randomStream } from "./random"
 
-export const SCENES = ["liquid", "nebula", "lattice", "fractal", "moire"] as const
+export const SCENES = ["liquid", "nebula", "lattice", "moire"] as const
 export const TRANSITIONS = ["crossfade", "bloom", "ink", "petals"] as const
 
 const HOLD_SECONDS: [number, number] = [30, 55]
