@@ -1,147 +1,163 @@
-# Handover: Gaze into the Abyss
+# Handover: looping videos, credits beside the music, and a media CDN
 
-State on 2026-11-06, written to continue on a machine with full internet access.
+State on 2026-11-07. `main` is at `e1fdd6e`: seeded randomness (`#seed=`), random image and scene order,
+random transitions, and the opening from black. This branch, `wip/videos`, adds only
+`script/make_loop.sh` and this file. Nothing on the site changes yet.
 
-## Where things stand
+## What you asked for
 
-- `main` (`74ad35c`) is the deployed site: seven NASA images, three shader scenes (liquid kaleidoscope,
-  Julia bloom, Kali nebula), two tracks (*Aase's Death*, Tchaikovsky's Violin Concerto I), the pause/play
-  symbol, the full-screen button and the "Click on the abyss" prompt.
-- `wip/music-and-instruments` (this branch) adds only groundwork for more music, and nothing on the page
-  changes yet:
-  - `src/content.config.ts`: a track may give `midi` (a direct `.mid` URL) instead of `sourceZip`, but not
-    both, and may list `parts`.
-  - `script/render_soundtrack.py`: reads `midi` or `sourceZip`. It maps tracks by the `parts` list when the
-    MIDI's track names are useless, and refuses a part list whose length doesn't match the playing tracks
-    or that names a part with no band member. It also adds `corni` (one horn track) and a `triangle` band
-    member on GM *tinkle bell*.
-  - `handover/candidate-pieces.json`: six extra pieces I checked and mapped (below). None of them is in
-    `src/data/music.json`; copy in the ones you pick.
+1. **Video backgrounds** among the images, chosen to evoke nostalgia.
+2. **A playing video is the star:** the psychedelic overlay tones down while it plays.
+3. **Visual credits in the music caption area**, beside the play button.
+4. **A dedicated CDN for media**, so changing imagery, video or music doesn't mean redeploying it.
 
-`astro check` reports 0 errors, warnings and hints, and `pnpm build` passes on this branch. Rerendering
-reproduces the two committed MP3s byte for byte.
+## 1. Finding nostalgic, public-domain footage
 
-## To do
+The site's rule still holds: public domain only (CC0 counts), checked per item, because a collection's
+general status doesn't settle each file.
 
-### 1. Pick the pieces
+- **Prelinger Archives** (Internet Archive, `archive.org/details/prelinger`): 1940s–70s home movies,
+  travelogues, industrial and educational films. City streets, drive-ins, fairs, highways, holidays. Many
+  items carry the Public Domain Mark, but not all do, so read each item's licence field.
+- **NASA archival film**: 16 mm Gemini and Apollo footage (Earth from orbit, splashdowns, launch pads)
+  and Shuttle-era footage. Public domain unless marked.
+  - images.nasa.gov has it under queries like "Apollo 16mm".
+  - The NASA SVS archive is another source.
+- **US National Archives** (catalog.archives.gov) and the **Library of Congress** National Screening Room:
+  newsreels, government films and early 1900s actualities. US federal works are public domain. Watch for
+  donated material with its own terms.
+- **NOAA and US Fish & Wildlife** b-roll for wild animals and landscapes (public domain as federal works).
+  It looks more contemporary than nostalgic, though the film look below can help.
 
-You were going to choose them, possibly from the University of Arizona MIDI library
-(`http://midi.music.arizona.edu/search.php`). I couldn't reach it: it serves only plain HTTP, and its HTTPS
-certificate is for another host.
+To lean into nostalgia on footage that looks too clean, a film look could be added in `make_loop.sh` before
+encoding:
+- a gentle fade of contrast and saturation (`eq`, `colorbalance` toward warm highlights)
+- grain (`noise=alls=8:allf=t`)
+- slight gate weave (a tiny random `crop` shift per frame)
+- a soft vignette (`vignette`)
 
-**Check each file's licence before using it.** The composition can be public domain while a sequenced
-MIDI file is the sequencer's own work and copyrighted. The site has to stay public domain throughout (the
-README says so) so that it needs no credit line, so only use files whose page says public domain or CC0,
-or that come from a public-domain edition.
+Keep it subtle; the overlay and the page vignette add to it.
 
-The candidates I already checked are all public-domain Mutopia editions, with parts mapped in
-`handover/candidate-pieces.json`:
+Clips that loop well:
+- slow pans, aerials and time-lapses
+- crowds and traffic
+- water
+- clips without a cut, since a cut inside a clip reads as a glitch on every loop
 
-| id | Piece | Slowdown | Notes |
-|---|---|---|---|
-| `allegretto` | Beethoven, Symphony 7, II. Allegretto | 0.6 | ~12 min; horns labelled "english horn" in the MIDI |
-| `canzonetta` | Tchaikovsky, Violin Concerto, II. Canzonetta | 0.75 | ~8 min; solo on horn |
-| `lento` | Dvořák, "American" Quartet, II. Lento | 0.75 | ~7 min; unnamed tracks, parts listed |
-| `anitra` | Grieg, *Anitra's Dance* | 0.6 | ~3 min; adds the triangle |
-| `finale` | Tchaikovsky, Violin Concerto, III. Finale | 0.7 | ~13 min; solo on horn |
-| `american` | Dvořák, "American" Quartet, I. Allegro | 0.6 | ~10 min; unnamed tracks, parts listed |
-
-Each track is about 0.7 MB per minute at 96 kbps, so six more add roughly 40 MB to the repo.
-
-To add a piece:
-
-1. Add an entry to `src/data/music.json` with the next `position`.
-2. Run the script once to see whether the MIDI's track names map onto the band. It stops and names the
-   track if not; then add `parts` in track order (look at each track's GM program and pitch range).
-3. Render (see **Rendering** below).
-4. Add the edition to `/credits`; that happens automatically from the JSON.
-
-### 2. Revise the instruments
-
-You found some GM sounds machine-like and the percussive ones more realistic. The band lives in `BAND`
-and `GENERAL_MIDI` at the top of `script/render_soundtrack.py`, and every track uses it.
-
-- **Within FluidR3:** the sustained wind and synth patches are the weak ones: ocarina, shakuhachi, pan
-  flute, church organ, choir and the pads. The struck and plucked ones hold up: celesta, vibraphone,
-  kalimba, harp, timpani and taiko, and also untried ones like marimba (12), glockenspiel (9), tubular bells
-  (14), dulcimer (15) and steel drums (114). A band made mostly of mallets and plucks would play to the
-  soundfont's strengths.
-- **A better soundfont.** Candidates to evaluate, but check each licence yourself first:
-  - *MuseScore General* (MIT at the time I knew it)
-  - *GeneralUser GS* (permissive licence)
-  - *VSCO 2 Community Edition* (CC0 orchestral samples, but SFZ, so it needs `sfizz` rather than FluidSynth)
-
-  Prefer CC0, public domain or MIT so the page still needs no credit. `SOUNDFONT` in the script is the
-  only path to change for an `.sf2`.
-- **Less mechanical playback:** constant velocities and grid-perfect timing are part of the machine feel.
-  Cheap fixes inside `recast()`:
-  - a few milliseconds of seeded random timing jitter
-  - ±10% velocity jitter
-  - CC11 expression swells on the sustained voices
-
-  Seed the randomness so renders stay reproducible.
-
-### 3. Shuffle the playlist
-
-Wanted: a random piece first on every visit, then a shuffled order, reshuffled after each full pass and
-never the same piece twice in a row across the boundary. Only `src/scripts/soundtrack.ts` changes:
-
-- Keep the single `<audio>` element and swap its `src`. iPadOS grants playback permission per element,
-  so a second element would be blocked between tracks.
-- Replace the `track` index with a queue: `queue = shuffle(tracks)`. When the queue empties, reshuffle,
-  and if the new first item equals the one that just played, swap it with the second.
-- `Soundtrack.astro` renders `src={paths[0]}` and `preload="auto"` for the first track. Either pick the
-  first track in the script before the element loads (set `audio.src` at startup and drop the
-  server-rendered `src`), or accept that the browser preloads track 1 needlessly.
-- `prefetchNext` should fetch the next item in the queue.
-
-### 4. Raise the visuals' opacity
-
-In `src/components/Trip.astro`: `.trip` has `opacity: .5`, and `@keyframes breathe` goes from `.3` to
-`.7`. The request was "higher"; try `.75` with `.55` → `.9`, and judge it over the brightest images
-(Galaxy Center, Tarantula).
-
-## Rendering
+## 2. Making loops: `script/make_loop.sh`
 
 ```bash
-uv run script/render_soundtrack.py
+script/make_loop.sh INPUT NAME [START] [LENGTH] [CROSSFADE] [HEIGHT]
+script/make_loop.sh ~/Downloads/prelinger-reel.mp4 drive-in 12 30 2 1080
 ```
 
-It needs:
-- FluidSynth and the FluidR3 GM soundfont (Debian/Ubuntu: `fluid-soundfont-gm`; macOS: `brew install
-  fluid-synth` and download `FluidR3_GM.sf2`, then point `SOUNDFONT` at it)
-- ffmpeg with libmp3lame
-- uv, which installs `mido` and `numpy` from the script's inline metadata
+It takes LENGTH seconds from START and makes a silent loop LENGTH − CROSSFADE seconds long. The last
+CROSSFADE seconds fade into the excerpt's opening, which ends on the frame the loop starts with. It writes
+`public/videos/NAME.av1.mp4` (SVT-AV1, CRF 38) and `public/videos/NAME.h264.mp4` (x264, CRF 23, for
+browsers without AV1). Once the CDN exists, change `out_dir` to a staging folder and upload from there.
 
-It renders every track in `src/data/music.json`, which takes about a minute per 10 minutes of music.
-Output is deterministic: the reverb's noise is seeded, so an unchanged track comes out byte-identical,
-and `git status` shows only the tracks you actually changed.
+It needs ffmpeg with `libsvtav1` and `libx264` (Homebrew's `ffmpeg` has both) and `bc`.
 
-## Checking the site
+**Tested here** on NASA's "GOLD Resources: ISS Airglow" (`GSFC_20180124_m12825_ISS_Airglow`, city lights
+under airglow). A 20 s excerpt at 720p became an 18 s loop: 3.0 MB as AV1 and 5.6 MB as H.264. The jump
+from the last frame back to the first measured 7.3, the same as an ordinary moving frame-to-frame step in
+that clip (median 6.7, maximum 15), so the seam is invisible. At 1080p expect roughly 2–2.5× those sizes.
+It took about 90 seconds for both encodes on four cores; your Mac will be quicker.
 
-```bash
-pnpm install
-pnpm exec astro check
-pnpm build
-pnpm exec astro preview
-```
+## 3. Wiring video into the site (not started)
 
-What I verified in headless Chromium, and what to retest after changes, especially on the iPad:
+Planned design:
 
-- **Autoplay blocked:** the prompt appears, and a tap or click starts the music. The page listens for
-  `click`, because iPadOS doesn't count a touch's `pointerdown` as permission to play.
-- **A play request that hangs**, as Brave on iPad does: a watchdog treats "track loaded but silent after
-  2 s" as blocked and shows the prompt.
-- **The browser pausing the music on its own:** the prompt comes back.
-- **Pause** is instant.
-- **Tracks hand over and loop.**
-- **The full-screen button** enters and leaves full screen and hides where unsupported. Brave on iPad may
-  hide it, since WebKit-based browsers only expose full screen if the app enables it.
+- **Data.** Rename the `cosmos` collection to `backgrounds` (or keep the name) and let an entry be an image
+  *or* a video:
+  - `image: image().optional()`
+  - `video: z.object({ av1: z.string(), h264: z.string() }).optional()` holding CDN URLs
+  - a `.refine` requiring exactly one of them
+  - generalise `nasaId` into a `sourceUrl`, since not everything comes from NASA
+- **Markup** (`Slideshow.astro`). A video slide renders
+  `<video muted playsinline loop preload="none" data-av1 data-h264>`. Muted, inline video autoplays
+  everywhere, iOS included.
+- **Loading** (`slideshow.ts`). `load()` already gates every change on the next background being ready. For
+  a video:
+  - add `<source>` elements, AV1 first with `type='video/mp4; codecs="av01.0.08M.08"'`, then H.264 with
+    `codecs="avc1.640029"`
+  - call `video.load()` and resolve on `canplaythrough`
+  - make `load` report failure, and add a patience timeout (say 60 s). Then a background that never loads
+    is skipped instead of stalling the slideshow; currently a failed image decode simply shows it anyway.
 
-## Traps
+  The black openings and dip-to-black transitions cover the buffering, as you said.
+- **Playback.** `play()` in `show()`. Pause the leaving slide when its transition ends, so off-screen
+  videos don't decode.
+- **Reduced motion.** Under `prefers-reduced-motion`, leave video entries out of the shuffle; the drift and
+  hue animations already stop there.
+- **Randomness.** No change needed: videos join the same `slides` stream, so `#seed=` covers them.
 
-- `getCollection` doesn't keep the JSON's order; everything sorts by `position` (`src/scripts/by-position.ts`).
-- Astro caches content collections in `.astro/`. If a data change seems ignored, `rm -rf .astro` and rebuild.
-- Image `sizes` is `118vw` because the slow drift zooms images up to 1.18×.
-- Pin package versions exactly, to releases at least two weeks old (Astro is on 7.4.2 for that reason).
-- Netlify: `netlify.toml` builds with `pnpm run build` and publishes `dist`; `NODE_VERSION` ≥ 22.23.4 (Astro 7's minimum).
+## 4. The video as the star
+
+When a video slide becomes active, set `data-background="video"` on `.abyss` (clear it for images). Then
+CSS:
+
+- **Overlay.** `.abyss[data-background="video"] .trip` drops from `.75` (breathing `.45`–`1`) to about
+  `.12`–`.2`, with a slow transition (3–4 s) so the change itself is a gentle fade. Consider pausing its
+  `breathe` animation too.
+- **Hue drift.** Turn off `.slides`' hue rotation for video slides. Old footage should keep its own colours,
+  and a hue shift fights the nostalgia. Images can keep it.
+- **Image filter.** Lighten the `brightness(.8) saturate(1.3) contrast(1.05)` filter (or drop it) for video.
+
+A further option is for the shader scheduler to prefer its calmest scene, `liquid` at low exposure, during
+video, via a flag `sceneSchedule` reads. Start with opacity alone and judge.
+
+## 5. Visual credits beside the music
+
+`Soundtrack.astro` already has the caption next to the play button:
+`<p class="now-playing">` with `.now-title`, `.now-work` and `.now-edition`, filled from the audio element's
+`data-credits`, and shown while the controls show. Add a second line, e.g.
+`<p class="now-showing"><strong class="now-showing-title"></strong> <a class="now-showing-credit"></a></p>`:
+
+- `slideshow.ts` dispatches an `abyss:background` event carrying the entry's title, credit and source URL
+  whenever a slide arrives. Put them on each `.slide` as data attributes in `Slideshow.astro`.
+- A small listener fills the line. Style it like `.now-playing` so both fade with the controls.
+- `/credits` keeps listing everything; for videos, show a poster frame or a `preload="metadata"` mini
+  video instead of `<Image>`.
+
+## 6. A media CDN
+
+**Goal:** media lives at its own origin, so changing images, videos or music never redeploys the site, and
+deploys stay small. The music alone is 28 MB in `public/music`; the images are 6 MB in `src/assets/cosmos`.
+
+**Recommendation: Cloudflare R2**, a public bucket on a custom domain such as `media.<your domain>`. It has
+no egress fees, which matters for video, sits behind Cloudflare's cache, and speaks the S3 API, so `rclone`
+or `aws s3 sync` uploads. Alternatives:
+- **Bunny Storage plus Bunny CDN:** very cheap and video-friendly, with an optional image optimiser.
+- **Backblaze B2 behind Cloudflare:** free egress through the Bandwidth Alliance.
+
+**Layout and caching:**
+- Use content-hashed or versioned paths, e.g. `videos/drive-in.3f9a2c.av1.mp4`, with
+  `Cache-Control: public, max-age=31536000, immutable`, so a new upload is simply a new URL in the data
+  files. Never overwrite a path in place.
+- No CORS is needed for `<img>`, `<video>` and `<audio>` playback. Add it only if the shader ever samples a
+  video or image into WebGL.
+
+**Images lose Astro's processing once they're off-site.** Today `getImage` builds the 1280–3840 px WebP set
+at build time. Either:
+- keep the few images in the repo as now and move only video and music, which is the bulk; or
+- add a script that generates the widths and uploads them, with the data file listing the URLs. An image
+  CDN with on-the-fly resizing (Cloudflare Images, Bunny Optimizer) would also do.
+
+Start with the first option.
+
+**Wiring:**
+- Add `PUBLIC_MEDIA_ORIGIN` (in `astro.config.mjs` or a Netlify environment variable). Data entries hold
+  paths relative to it, and components prefix it.
+- `script/render_soundtrack.py` and `script/make_loop.sh` write to a local `media/` folder that is
+  git-ignored, and an upload script (`rclone copy media r2:abyss-media`) publishes it.
+- Delete the MP3s from `public/music` once they're served from the CDN.
+
+**History.** The MP3s, OGG sources and images already committed stay in git history. If repo size matters,
+rewriting history (`git filter-repo`) is the only way to shrink clones, and it is disruptive. Probably not
+worth it for a personal project.
+
+## Not committed
+
+The test loops (`public/videos/airglow-test.*`) and the source clip stayed on the cloud machine. Rerun the
+script on your Mac to reproduce them.
