@@ -67,7 +67,7 @@ credit; the credit comes from the entry's `edition` and `editionUrl` and is show
 entry in `src/data/music.json` (`firstBar` and `lastBar` cut an excerpt from a MIDI file), then render:
 
 ```bash
-uv run script/render_soundtrack.py                                    # writes media/music/<file>
+uv run script/render_soundtrack.py [ID...]                            # writes media/music/<file>
 aws-vault exec medic -- script/upload_media.sh music media/music/NAME.mp3
 ```
 
@@ -75,7 +75,8 @@ Put the printed path (without the origin) in the entry's `path`; a re-rendered t
 
 The script reads each source from `sources/` under the entry's `member` name, downloading it from `source` when it
 is missing (a zip's `member` is the file taken from it), and stops if the file's SHA-256 differs from the entry's
-`sha256`. Commit a new file there with its checksum. The files keep their editions' licences, credited at
+`sha256`. A new source stays out of git (`sources/` is ignored; the four older ones are tracked): its `source` URL and
+`sha256` are enough to fetch and verify it again. The files keep their editions' licences, credited at
 `/credits`.
 
 It needs FluidSynth, the FluidR3 GM soundfont (Debian: `fluid-soundfont-gm`), ffmpeg with libmp3lame, and uv, which

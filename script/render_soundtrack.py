@@ -40,6 +40,7 @@ MIX_HEADROOM = 0.25
 USER_AGENT = "gaze-into-the-abyss soundtrack renderer (https://github.com/moroz/gaze-into-the-abyss)"
 
 class Piece(NamedTuple):
+    id: str
     output: str
     source: str
     member: str
@@ -51,7 +52,7 @@ class Piece(NamedTuple):
 
 def playlist() -> list[Piece]:
     entries = sorted(json.loads(PLAYLIST.read_text()), key=lambda entry: entry["position"])
-    return [Piece(entry["file"], entry["source"], entry["member"], entry["sha256"], entry["slowdown"],
+    return [Piece(entry["id"], entry["file"], entry["source"], entry["member"], entry["sha256"], entry["slowdown"],
                   entry.get("firstBar"), entry.get("lastBar"))
             for entry in entries]
 
@@ -218,10 +219,15 @@ def render(piece: Piece, work: Path) -> None:
 
 
 def main() -> None:
+    """Renders every track, or only those whose music.json ids are given, e.g. `render_soundtrack.py ode-to-joy`."""
+    chosen = set(sys.argv[1:])
+    pieces = [piece for piece in playlist() if not chosen or piece.id in chosen]
+    if unknown := chosen - {piece.id for piece in pieces}:
+        raise SystemExit(f"no track in music.json has the id {', '.join(sorted(unknown))}")
     with tempfile.TemporaryDirectory() as directory:
         work = Path(directory)
         write_wav(work / "ir.wav", impulse_response())
-        for piece in playlist():
+        for piece in pieces:
             render(piece, work)
 
 

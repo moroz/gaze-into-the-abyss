@@ -4,3 +4,4 @@ dist/
 __pycache__/
 infra/node_modules/
 media/
+sources/
