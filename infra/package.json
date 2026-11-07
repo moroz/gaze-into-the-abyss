@@ -1,0 +1,14 @@
+{
+  "name": "abyss-media-infra",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "@pulumi/aws": "7.52.0",
+    "@pulumi/pulumi": "3.274.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3"
+  }
+}

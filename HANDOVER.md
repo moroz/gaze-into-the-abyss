@@ -53,8 +53,8 @@ script/make_loop.sh ~/Downloads/prelinger-reel.mp4 drive-in 12 30 2 1080
 
 It takes LENGTH seconds from START and makes a silent loop LENGTH − CROSSFADE seconds long. The last
 CROSSFADE seconds fade into the excerpt's opening, which ends on the frame the loop starts with. It writes
-`public/videos/NAME.av1.mp4` (SVT-AV1, CRF 38) and `public/videos/NAME.h264.mp4` (x264, CRF 23, for
-browsers without AV1). Once the CDN exists, change `out_dir` to a staging folder and upload from there.
+`media/NAME.av1.mp4` (SVT-AV1, CRF 38) and `media/NAME.h264.mp4` (x264, CRF 23, for browsers without
+AV1). `media/` is git-ignored; `script/upload_media.sh` publishes it to the CDN (§6).
 
 It needs ffmpeg with `libsvtav1` and `libx264` (Homebrew's `ffmpeg` has both) and `bc`.
 
@@ -125,18 +125,29 @@ video, via a flag `sceneSchedule` reads. Start with opacity alone and judge.
 **Goal:** media lives at its own origin, so changing images, videos or music never redeploys the site, and
 deploys stay small. The music alone is 28 MB in `public/music`; the images are 6 MB in `src/assets/cosmos`.
 
-**Recommendation: Cloudflare R2**, a public bucket on a custom domain such as `media.<your domain>`. It has
-no egress fees, which matters for video, sits behind Cloudflare's cache, and speaks the S3 API, so `rclone`
-or `aws s3 sync` uploads. Alternatives:
-- **Bunny Storage plus Bunny CDN:** very cheap and video-friendly, with an optional image optimiser.
-- **Backblaze B2 behind Cloudflare:** free egress through the Bandwidth Alliance.
+**Built: CloudFront in front of a private S3 bucket**, on the default domain, in the `medic` AWS account
+(eu-central-1). Pulumi in `infra/` defines it; state lives in `s3://gaze-into-the-abyss-pulumi-state-eu-central-1/state`,
+and the stack's secrets passphrase is age-encrypted in `infra/mise.toml`.
 
-**Layout and caching:**
-- Use content-hashed or versioned paths, e.g. `videos/drive-in.3f9a2c.av1.mp4`, with
-  `Cache-Control: public, max-age=31536000, immutable`, so a new upload is simply a new URL in the data
-  files. Never overwrite a path in place.
-- No CORS is needed for `<img>`, `<video>` and `<audio>` playback. Add it only if the shader ever samples a
-  video or image into WebGL.
+- Origin: `https://d19iphx0l37kqa.cloudfront.net` (distribution `E2L5CTKPND5E10`)
+- Bucket: `gaze-into-the-abyss-media-f840ac64f80b9dcb6f47926108`, readable only through CloudFront
+  (Origin Access Control); a direct S3 request gets 403, and so does a missing key.
+- Cache policy `CachingOptimized`, which honours the objects' own `Cache-Control`; response headers policy
+  `SimpleCORS`, so WebGL or Web Audio can read media later.
+
+```bash
+cd infra && aws-vault exec medic -- mise exec -- pulumi up
+```
+
+**Layout and caching:** `script/upload_media.sh DIR FILE...` uploads each file as
+`DIR/<name>.<first 12 hex of sha256>.<rest>`, e.g. `videos/drive-in.3f9a2c1e4b7d.av1.mp4`, with
+`Cache-Control: public, max-age=31536000, immutable` set on the S3 object. The same bytes always get the same
+URL, an existing key is never overwritten, and a new upload is simply a new URL in the data files. It prints
+`file<TAB>url` per file.
+
+```bash
+aws-vault exec medic -- script/upload_media.sh videos media/drive-in.av1.mp4 media/drive-in.h264.mp4
+```
 
 **Images lose Astro's processing once they're off-site.** Today `getImage` builds the 1280–3840 px WebP set
 at build time. Either:
@@ -149,8 +160,8 @@ Start with the first option.
 **Wiring:**
 - Add `PUBLIC_MEDIA_ORIGIN` (in `astro.config.mjs` or a Netlify environment variable). Data entries hold
   paths relative to it, and components prefix it.
-- `script/render_soundtrack.py` and `script/make_loop.sh` write to a local `media/` folder that is
-  git-ignored, and an upload script (`rclone copy media r2:abyss-media`) publishes it.
+- `script/make_loop.sh` writes to the git-ignored `media/` folder; `script/render_soundtrack.py` still
+  writes to `public/music` and should follow. `script/upload_media.sh` publishes from there.
 - Delete the MP3s from `public/music` once they're served from the CDN.
 
 **History.** The MP3s, OGG sources and images already committed stay in git history. If repo size matters,

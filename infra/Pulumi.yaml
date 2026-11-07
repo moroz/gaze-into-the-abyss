@@ -1,0 +1,8 @@
+name: abyss-media
+description: CloudFront CDN in front of a private S3 bucket for the site's images, videos and music
+runtime:
+  name: nodejs
+  options:
+    packagemanager: pnpm
+backend:
+  url: s3://gaze-into-the-abyss-pulumi-state-eu-central-1/state?region=eu-central-1

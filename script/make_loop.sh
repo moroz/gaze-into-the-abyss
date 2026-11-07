@@ -4,7 +4,7 @@ set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
   echo "usage: $0 INPUT NAME [START_SECONDS] [LENGTH_SECONDS] [CROSSFADE_SECONDS] [HEIGHT]" >&2
-  echo "writes public/videos/NAME.av1.mp4 and public/videos/NAME.h264.mp4, a silent loop LENGTH - CROSSFADE long" >&2
+  echo "writes media/NAME.av1.mp4 and media/NAME.h264.mp4, a silent loop LENGTH - CROSSFADE long" >&2
   exit 1
 fi
 
@@ -15,7 +15,7 @@ length=${4:-30}
 crossfade=${5:-2}
 height=${6:-1080}
 
-out_dir="$(dirname "$0")/../public/videos"
+out_dir="$(dirname "$0")/../media"
 mkdir -p "$out_dir"
 
 body=$(echo "$length - $crossfade" | bc -l)
