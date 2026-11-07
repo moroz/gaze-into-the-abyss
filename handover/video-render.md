@@ -55,10 +55,10 @@ See the README's "Rendering a video" for usage.
 
 ## Open
 
-1. **Black flashes on the site**, reported while watching it in a browser. One cause found and fixed: a `<video>`
-   wrapping round its loop briefly has no frame, and the stage then dropped the layer to black; it now shows the
-   warp's last frame. A 90 s headless check (screenshots every 100 ms) found no flash afterwards, but the report came
-   again; which browser and what was on screen are not known yet.
+1. **Black flashes on the site**: fixed. A `<video>` wrapping round its loop briefly had no frame and the stage dropped
+   the layer to black; it now shows the warp's last frame. The user confirmed no flashes after that. A review then
+   hardened the stage (a throw no longer stops the loop, the source videos are full size under the canvas, images
+   upload during the hold) and the renderer (a broken page or frame stops the run; params.json pins a resume).
 2. The site on phones is untested since the rewrite: canvas at device pixel ratio up to 1.5, one extra full-screen
    pass per background compared with before.
 3. Music: the lossless re-render above, then mux: `ffmpeg -i video.mp4 -i music.wav -c:v copy -c:a aac -b:a 384k`.
