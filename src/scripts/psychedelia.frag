@@ -1,12 +1,13 @@
 precision highp float;
 uniform vec2 resolution;
 uniform float time;
+uniform float fromScene;
+uniform float toScene;
+uniform float blend;
+uniform float transition;
 const float TAU = 6.2831853;
-const float SCENE_SECONDS = 40.0;
-const float BLEND_SECONDS = 8.0;
 // Exposure for the overlay: lifts the faint filaments a lot and the already bright scenes only a little.
 const float EXPOSURE = 2.4;
-const float SCENE_COUNT = 4.0;
 const float FRACTAL_ITERATIONS = 128.0;
 
 vec3 spectrum(float t) { return 0.5 + 0.5 * cos(TAU * (t + vec3(0.0, 0.33, 0.67))); }
@@ -135,25 +136,27 @@ vec3 fractalKaleidoscope(vec2 uv, float t) {
   return (spectrum(t * 0.02 + 0.1 * length(p)) * mandelbrot + spectrum(t * 0.02 + 0.45 - 0.1 * length(p)) * julia * 0.8) * 0.55;
 }
 
-float sceneTime(float scene) {
-  return mod(time - scene * SCENE_SECONDS, SCENE_SECONDS * SCENE_COUNT);
+vec3 scene(float index, vec2 uv) {
+  if (index < 0.5) return liquidKaleidoscope(uv, time);
+  if (index < 1.5) return kaliNebula(uv, time);
+  if (index < 2.5) return mirrorLattice(uv, time);
+  return fractalKaleidoscope(uv, time);
 }
 
-float sceneWeight(float scene) {
-  float local = sceneTime(scene);
-  return smoothstep(0.0, BLEND_SECONDS, local) * (1.0 - smoothstep(SCENE_SECONDS, SCENE_SECONDS + BLEND_SECONDS, local));
+float revealOrder(vec2 uv) {
+  if (transition < 0.5) return 0.5;
+  if (transition < 1.5) return clamp(length(uv) / 1.1, 0.0, 1.0);
+  if (transition < 2.5) return smoothstep(0.25, 0.75, fbm(uv * 2.2 + 11.0));
+  return 0.5 + 0.5 * sin(5.0 * atan(uv.y, uv.x) + 9.0 * length(uv));
 }
 
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * resolution) / min(resolution.x, resolution.y);
-  vec3 colour = vec3(0.0);
-  float weight = sceneWeight(0.0);
-  if (weight > 0.0) colour += weight * liquidKaleidoscope(uv, time);
-  weight = sceneWeight(1.0);
-  if (weight > 0.0) colour += weight * kaliNebula(uv, time);
-  weight = sceneWeight(2.0);
-  if (weight > 0.0) colour += weight * mirrorLattice(uv, time);
-  weight = sceneWeight(3.0);
-  if (weight > 0.0) colour += weight * fractalKaleidoscope(uv, time);
+  vec3 colour = scene(toScene, uv);
+  if (blend < 1.0) {
+    float softness = 0.18;
+    float revealed = smoothstep(-softness, softness, blend * (1.0 + 2.0 * softness) - softness - revealOrder(uv));
+    colour = mix(scene(fromScene, uv), colour, revealed);
+  }
   gl_FragColor = vec4(1.0 - exp(-EXPOSURE * colour), 1.0);
 }

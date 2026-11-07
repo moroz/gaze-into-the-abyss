@@ -1,3 +1,5 @@
+import type { SceneMoment } from "./scene-schedule"
+
 const VERTEX = `
 attribute vec2 position;
 void main() { gl_Position = vec4(position, 0.0, 1.0); }
@@ -6,16 +8,20 @@ void main() { gl_Position = vec4(position, 0.0, 1.0); }
 const RESOLUTION_SCALE = 0.75
 const MAX_PIXELS = 1_000_000
 const FRAME_INTERVAL_MS = 1000 / 24
-// Starting anywhere in the first ten minutes lands a visit in any scene; #t=<seconds> in the URL picks the moment.
 const RANDOM_START_MS = 600_000
 
-export function runShader(canvas: HTMLCanvasElement, fragment: string): void {
+export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: (seconds: number) => SceneMoment): void {
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
   const chosen = Number(new URLSearchParams(location.hash.slice(1)).get("t"))
-  const started = performance.now() - (chosen > 0 ? chosen * 1000 : Math.random() * RANDOM_START_MS)
+  const loaded = performance.now()
+  const started = loaded - (chosen > 0 ? chosen * 1000 : Math.random() * RANDOM_START_MS)
   let gl: WebGLRenderingContext
   let resolution: WebGLUniformLocation | null
   let time: WebGLUniformLocation | null
+  let fromScene: WebGLUniformLocation | null
+  let toScene: WebGLUniformLocation | null
+  let blend: WebGLUniformLocation | null
+  let transition: WebGLUniformLocation | null
   let frame = 0
   let drawnAt: number | undefined
 
@@ -51,6 +57,10 @@ export function runShader(canvas: HTMLCanvasElement, fragment: string): void {
 
     resolution = gl.getUniformLocation(program, "resolution")
     time = gl.getUniformLocation(program, "time")
+    fromScene = gl.getUniformLocation(program, "fromScene")
+    toScene = gl.getUniformLocation(program, "toScene")
+    blend = gl.getUniformLocation(program, "blend")
+    transition = gl.getUniformLocation(program, "transition")
     return true
   }
 
@@ -83,6 +93,11 @@ export function runShader(canvas: HTMLCanvasElement, fragment: string): void {
     gl.viewport(0, 0, width, height)
     gl.uniform2f(resolution, width, height)
     gl.uniform1f(time, (now - started) / 1000)
+    const moment = sceneAt((now - loaded) / 1000)
+    gl.uniform1f(fromScene, moment.from)
+    gl.uniform1f(toScene, moment.to)
+    gl.uniform1f(blend, moment.blend)
+    gl.uniform1f(transition, moment.transition)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 

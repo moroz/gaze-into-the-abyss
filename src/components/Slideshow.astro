@@ -3,11 +3,6 @@ import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
 import { getImage } from "astro:assets"
 
-interface Props {
-  secondsPerSlide: number
-}
-
-const { secondsPerSlide } = Astro.props
 const DRIFT_ZOOM_SIZES = "118vw"
 
 const slides = await Promise.all(
@@ -18,12 +13,10 @@ const slides = await Promise.all(
 )
 ---
 
-<div class="slides" data-seconds-per-slide={secondsPerSlide} style={`--seconds-per-slide: ${secondsPerSlide}s`}>
-  {slides.map((slide, index) => (
-    <div class:list={["slide", { "is-active": index === 0 }]}>
-      {index === 0
-        ? <img src={slide.src} srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" fetchpriority="high" />
-        : <img data-src={slide.src} data-srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" />}
+<div class="slides">
+  {slides.map((slide) => (
+    <div class="slide">
+      <img data-src={slide.src} data-srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" />
     </div>
   ))}
 </div>
@@ -32,24 +25,39 @@ const slides = await Promise.all(
   import { runSlideshow } from "../scripts/slideshow"
 
   const container = document.querySelector<HTMLElement>(".slides")!
-  runSlideshow([...container.querySelectorAll<HTMLElement>(".slide")], Number(container.dataset.secondsPerSlide))
+  runSlideshow(container, [...container.querySelectorAll<HTMLElement>(".slide")]).then(() => {
+    document.dispatchEvent(new Event("abyss:first-image"))
+    document.documentElement.dataset.firstImage = "shown"
+  })
 </script>
 
 <style>
   .slides { position: absolute; inset: 0; animation: hue 180s linear infinite; }
-  .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 4s ease-in-out; }
-  .slide:global(.is-active) { opacity: 1; }
+  .slide { position: absolute; inset: 0; opacity: 0; }
+  .slide:global(.is-active) { z-index: 1; opacity: 1; }
   img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.8) saturate(1.3) contrast(1.05); transform: var(--from); }
-  .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: drift calc(var(--seconds-per-slide) + 4s) ease-in-out both; }
-  .slide:nth-child(4n+1) { --from: scale(1.04); --to: scale(1.16) translate(-2%, -1.5%); }
-  .slide:nth-child(4n+2) { --from: scale(1.18) translate(2%, 1%); --to: scale(1.04) translate(-1%, 0); }
-  .slide:nth-child(4n+3) { --from: scale(1.08) translate(-2%, 1.5%) rotate(-1deg); --to: scale(1.18) translate(1.5%, -1%) rotate(1deg); }
-  .slide:nth-child(4n) { --from: scale(1.15) translate(0, -2%); --to: scale(1.05) translate(0, 2%); }
+  .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: drift var(--drift-ms) ease-in-out both; }
 
+  .slide[data-transition="crossfade"]:global(.is-active) { animation: fade-in 4s ease-in-out both; }
+  .slide[data-transition="crossfade"]:global(.is-leaving) { animation: fade-out 4s ease-in-out both; }
+  .slide[data-transition="through-black"]:global(.is-active) { animation: fade-in 3.5s 2.5s ease-out both; }
+  .slide[data-transition="through-black"]:global(.is-leaving) { animation: fade-out 2.5s ease-in both; }
+  .slide[data-transition="bloom"]:global(.is-active) { animation: bloom-in 5s cubic-bezier(.2, .7, .2, 1) both; }
+  .slide[data-transition="bloom"]:global(.is-leaving) { animation: fade-out 5s ease-in both; }
+  .slide[data-transition="dissolve"]:global(.is-active) { animation: fade-in 9s linear both; }
+  .slide[data-transition="dissolve"]:global(.is-leaving) { animation: fade-out 9s linear both; }
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes bloom-in {
+    from { opacity: 0; transform: scale(1.35); filter: blur(18px) brightness(1.8); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
   @keyframes drift { from { transform: var(--from); } to { transform: var(--to); } }
   @keyframes hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
 
   @media (prefers-reduced-motion: reduce) {
     .slides, img { animation: none !important; }
+    .slide[data-transition="bloom"]:global(.is-active) { animation-name: fade-in; }
   }
 </style>

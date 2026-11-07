@@ -11,15 +11,20 @@ pnpm dev
 ## What it is made of
 
 - **Imagery**: public-domain NASA images in `src/assets/cosmos`, listed with their credits in
-  `src/data/cosmos.json`. Astro builds a responsive set of sizes for each one.
-- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, cross-fading between a liquid
-  kaleidoscope, a Kali-set nebula folded into eight mirrors, a three-mirror kaleidoscope that tiles the screen, and the
-  Mandelbrot boundary with its Julia sets in six mirrors, over the imagery.
+  `src/data/cosmos.json`. Astro builds a responsive set of sizes for each one. They play in a fresh random order on
+  every visit, each for a random stretch with a random drift, changing by a crossfade, a dip through black, a bloom
+  or a slow dissolve.
+- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with four scenes over the imagery: a liquid
+  kaleidoscope (`liquid`), a Kali-set nebula folded into eight mirrors (`nebula`), a three-mirror kaleidoscope that
+  tiles the screen (`lattice`), and the Mandelbrot boundary with its Julia sets in six mirrors (`fractal`).
+  `src/scripts/scene-schedule.ts` plays them in random order for random lengths, changing by a crossfade, a bloom from
+  the centre, an ink-like dissolve or a petal wipe.
+- **Opening**: everything starts in total blackness, which lifts once the first image has loaded.
 - **Music**: `public/music`, rendered from the recordings and MIDI editions listed in `src/data/music.json`. Beside the play
   button, while the controls show, a caption says what is playing and whose edition it is.
 - **Credits**: `/credits`, generated from both data files.
-- **Links**: `#t=<seconds>` starts the visuals at that moment and `#track=<id>` starts the music on that
-  `music.json` entry, e.g. `/#track=new-world-finale&t=120`.
+- **Links**: `#scene=<name>` opens on that visual scene, `#t=<seconds>` sets the moment within the scenes'
+  animation, and `#track=<id>` starts the music on that `music.json` entry, e.g. `/#scene=liquid&track=new-world-finale`.
 
 ## Adding an image
 
