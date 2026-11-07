@@ -1,7 +1,7 @@
 # Handover: looping videos, credits beside the music, and a media CDN
 
-State on 2026-11-07, merged into `main`. Six video loops (four of bison, two desert) play among the images from
-the CloudFront CDN, with their credits beside the music. §3–§6 describe what was built.
+State on 2026-11-07, merged into `main`. Thirteen video loops (bison, elk, cranes, deep-sea jellies, lava, aurora
+and desert) play among the images from the CloudFront CDN, warped by WebGL, with their credits beside the music. §3–§6 describe what was built.
 
 ## What you asked for
 
@@ -122,8 +122,10 @@ the slideshow picks one effect on top, from the seeded `video effects` stream (`
 An entry's `effects` narrows the draw to the effects that suit that clip: the medusa is always a kaleidoscope, the
 bison in snow always thermal.
 
-The `<video crossorigin>` stays underneath; the canvas removes itself if WebGL 2, its context or the frames are
-unavailable. The candidates were tried out first in a demo page (Abyss Effect Lab) before these five were chosen,
+The `<video crossorigin>` stays underneath; the canvas removes itself if WebGL 2 or its context is unavailable.
+(Without CORS the video itself fails to load, because of `crossorigin`, and the slideshow skips it.) Only a video on
+screen holds a context, and a paused one releases it: browsers cap live contexts and would otherwise evict the
+trip overlay's. The candidates were tried out first in a demo page (Abyss Effect Lab) before these five were chosen,
 alongside the `moire` overlay scene.
 
 ## 5. Credits beside the music
@@ -173,8 +175,8 @@ at build time. Either:
 Start with the first option.
 
 **Wiring:**
-- Add `PUBLIC_MEDIA_ORIGIN` (in `astro.config.mjs` or a Netlify environment variable). Data entries hold
-  paths relative to it, and components prefix it.
+- Done: `src/scripts/media.ts` prefixes data paths with `PUBLIC_MEDIA_ORIGIN`, defaulting to the CloudFront
+  domain, so no Netlify setting is needed unless the origin moves.
 - `script/make_loop.sh` writes to the git-ignored `media/` folder; `script/render_soundtrack.py` still
   writes to `public/music` and should follow. `script/upload_media.sh` publishes from there.
 - Delete the MP3s from `public/music` once they're served from the CDN.

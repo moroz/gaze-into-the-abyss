@@ -10,7 +10,8 @@ pnpm dev
 
 ## What it is made of
 
-- **Imagery**: NASA images in `src/assets/cosmos` and looping, oversaturated videos of bison and desert served from
+- **Imagery**: NASA images in `src/assets/cosmos` and looping, oversaturated, warped videos of herds, birds, deep-sea
+  jellies, lava, aurora and desert served from
   a CloudFront CDN (`infra/`), all listed with their credits in `src/data/backgrounds.json`. Astro builds a
   responsive set of sizes for each image. They play in a fresh random order on every visit, each for a random
   stretch, changing by a crossfade, a dip through black, a bloom or a slow dissolve; the one on screen is credited
@@ -21,7 +22,7 @@ pnpm dev
   drifting sets of rings interfering (`moire`).
   `src/scripts/scene-schedule.ts` plays them in random order for random lengths, changing by a crossfade, a bloom from
   the centre, an ink-like dissolve or a petal wipe.
-- **Opening**: everything starts in total blackness, which lifts once the first image has loaded.
+- **Opening**: everything starts in total blackness, which lifts once the first background has loaded, or after 7 s.
 - **Music**: `public/music`, rendered from the recordings and MIDI editions listed in `src/data/music.json`. Beside the play
   button, while the controls show, a caption says what is playing and whose edition it is.
 - **Credits**: `/credits`, generated from both data files.
@@ -37,7 +38,7 @@ Images and video backgrounds must be public domain (PD, PDM, CC0) or Creative Co
 or BY-NC-SA. NC is fine because the site is non-commercial; drop those items if that ever changes. Never ND
 for video: a loop is an excerpt with a crossfade, so it adapts the work. Check the licence on each item, not
 the collection. Credit the title, author, source and licence; a share-alike item makes its loop share-alike
-too, so say so in its credit.
+too, and `/credits` says so beside each one.
 
 Put an image's file in `src/assets/cosmos` and add an entry to `src/data/backgrounds.json`. For a video, cut a loop
 and upload it, then add an entry whose `video` holds the two printed paths (without the origin):
