@@ -1,3 +1,4 @@
+import { randomStream } from "./random"
 import type { SceneMoment } from "./scene-schedule"
 
 const VERTEX = `
@@ -14,7 +15,7 @@ export function runShader(canvas: HTMLCanvasElement, fragment: string, sceneAt: 
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
   const chosen = Number(new URLSearchParams(location.hash.slice(1)).get("t"))
   const loaded = performance.now()
-  const started = loaded - (chosen > 0 ? chosen * 1000 : Math.random() * RANDOM_START_MS)
+  const started = loaded - (chosen > 0 ? chosen * 1000 : randomStream("shader time").next() * RANDOM_START_MS)
   let gl: WebGLRenderingContext
   let resolution: WebGLUniformLocation | null
   let time: WebGLUniformLocation | null

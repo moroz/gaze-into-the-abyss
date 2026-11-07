@@ -1,4 +1,4 @@
-import { between, pick, shuffledForever } from "./random"
+import { randomStream } from "./random"
 
 export const SCENES = ["liquid", "nebula", "lattice", "fractal"] as const
 export const TRANSITIONS = ["crossfade", "bloom", "ink", "petals"] as const
@@ -24,6 +24,7 @@ export interface SceneMoment {
 const easeInOut = (x: number): number => x * x * (3 - 2 * x)
 
 export function sceneSchedule(firstScene?: number): (seconds: number) => SceneMoment {
+  const { between, pick, shuffledForever } = randomStream("scenes")
   const nextScene = shuffledForever(SCENES.map((_, index) => index), firstScene)
   const opening = nextScene()
   const segments: Segment[] = [{ scene: opening, start: 0, end: between(...HOLD_SECONDS), fade: 0, transition: 0 }]

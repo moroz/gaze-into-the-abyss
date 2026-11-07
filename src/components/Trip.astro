@@ -5,10 +5,11 @@
   import fragment from "../scripts/psychedelia.frag?raw"
   import { runShader } from "../scripts/shader-canvas"
   import { SCENES, sceneSchedule } from "../scripts/scene-schedule"
+  import { randomStream } from "../scripts/random"
 
   const canvas = document.querySelector<HTMLCanvasElement>(".trip")!
   const chosen = SCENES.indexOf(new URLSearchParams(location.hash.slice(1)).get("scene") as (typeof SCENES)[number])
-  canvas.style.animationDelay = `-${Math.random() * 100}s`
+  canvas.style.animationDelay = `-${randomStream("overlay").next() * 100}s`
   runShader(canvas, fragment, sceneSchedule(chosen >= 0 ? chosen : undefined))
 </script>
 

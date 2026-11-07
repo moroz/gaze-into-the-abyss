@@ -1,3 +1,5 @@
+import { randomStream } from "./random"
+
 const FADE_IN_MS = 3000
 const FULL_VOLUME = 0.8
 const PRELOAD_NEXT_SECONDS = 30
@@ -5,14 +7,6 @@ const HINT_MS = 6000
 const HINT_FADE_MS = 800
 const BLOCKED_CHECK_MS = 2000
 
-function shuffled<T>(items: T[]): T[] {
-  const copy = [...items]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
 
 export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle: HTMLButtonElement, hint: HTMLElement, first?: string): void {
   let current = ""
@@ -24,6 +18,7 @@ export function runSoundtrack(audio: HTMLAudioElement, tracks: string[], toggle:
   let hintTimer = 0
   let blockedCheck = 0
   let failures = 0
+  const { shuffled } = randomStream("music")
 
   // Every pass plays each track once in a fresh order, and a new pass never opens with the track that closed the last.
   const upcoming = (): string => {

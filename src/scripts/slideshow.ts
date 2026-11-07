@@ -1,4 +1,4 @@
-import { between, pick, shuffledForever } from "./random"
+import { randomStream } from "./random"
 
 const HOLD_MS: [number, number] = [18_000, 32_000]
 const FIRST_IMAGE_PATIENCE_MS = 6_000
@@ -35,10 +35,11 @@ const within = async (promise: Promise<void>, ms: number): Promise<void> => {
 }
 
 export async function runSlideshow(container: HTMLElement, slides: HTMLElement[]): Promise<void> {
+  const { between, next: random, pick, shuffledForever } = randomStream("slides")
   const next = shuffledForever(slides)
   let current: HTMLElement | undefined
 
-  container.style.animationDelay = `-${Math.random() * 180}s`
+  container.style.animationDelay = `-${random() * 180}s`
 
   const show = (arriving: HTMLElement, transition: Transition, holdMs: number): void => {
     const leaving = current

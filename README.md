@@ -23,8 +23,10 @@ pnpm dev
 - **Music**: `public/music`, rendered from the recordings and MIDI editions listed in `src/data/music.json`. Beside the play
   button, while the controls show, a caption says what is playing and whose edition it is.
 - **Credits**: `/credits`, generated from both data files.
-- **Links**: `#scene=<name>` opens on that visual scene, `#t=<seconds>` sets the moment within the scenes'
-  animation, and `#track=<id>` starts the music on that `music.json` entry, e.g. `/#scene=liquid&track=new-world-finale`.
+- **Links**: `#seed=<anything>` replays a visit: every random choice (the image and scene order, holds, drifts,
+  transitions, the music shuffle) comes from that seed, and without one the page picks a fresh seed and logs it to the
+  console. `#scene=<name>` opens on that visual scene, `#t=<seconds>` sets the moment within the scenes' animation, and
+  `#track=<id>` starts the music on that `music.json` entry, e.g. `/#seed=abyss&scene=liquid&track=new-world-finale`.
 
 ## Adding an image
 
