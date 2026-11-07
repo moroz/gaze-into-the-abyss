@@ -134,5 +134,30 @@
       "h264": "videos/bloodybelly-comb-jelly.e57944be681a.h264.mp4"
     },
     "overlay": "hue-cycle"
+  },
+  {
+    "id": "kilauea-lava-lake",
+    "position": 13,
+    "title": "Kīlauea's Halemaʻumaʻu lava lake, sped up",
+    "author": "Trougnouf",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:K%C4%ABlauea_volcano_-_Halema%CA%BBuma%CA%BBu_crater_eruption_in_2023_(C0608).webm",
+    "video": {
+      "av1": "videos/kilauea-lava-lake.10977f101f43.av1.mp4",
+      "h264": "videos/kilauea-lava-lake.43141fc9458f.h264.mp4"
+    }
+  },
+  {
+    "id": "aurora-australis-iss",
+    "position": 14,
+    "title": "Aurora australis from the International Space Station",
+    "author": "NASA's Scientific Visualization Studio / Marit Jentoft-Nilsen",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Aurora_Australis_as_seen_from_ISS_(SVS31281_-_1080p25).webm",
+    "video": {
+      "av1": "videos/aurora-australis-iss.a532339d4c6a.av1.mp4",
+      "h264": "videos/aurora-australis-iss.c7728e8b3325.h264.mp4"
+    }
   }
 ]

@@ -118,5 +118,38 @@
     },
     "overlay": "hue-cycle",
     "note": "Share-alike: the loop is CC BY-SA 4.0 too. The jelly drifts, so the crossfade briefly doubles it."
+  },
+  {
+    "name": "kilauea-lava-lake",
+    "title": "Kīlauea's Halemaʻumaʻu lava lake, sped up",
+    "author": "Trougnouf",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:K%C4%ABlauea_volcano_-_Halema%CA%BBuma%CA%BBu_crater_eruption_in_2023_(C0608).webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/3/38/K%C4%ABlauea_volcano_-_Halema%CA%BBuma%CA%BBu_crater_eruption_in_2023_%28C0608%29.webm",
+    "loop": {
+      "start": 0,
+      "length": 61.9,
+      "crossfade": 2,
+      "height": 1080,
+      "speed": 4
+    },
+    "note": "Share-alike: the loop is CC BY-SA 4.0 too. Encode with SPEED=4."
+  },
+  {
+    "name": "aurora-australis-iss",
+    "title": "Aurora australis from the International Space Station",
+    "author": "NASA's Scientific Visualization Studio / Marit Jentoft-Nilsen",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Aurora_Australis_as_seen_from_ISS_(SVS31281_-_1080p25).webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/9/93/Aurora_Australis_as_seen_from_ISS_%28SVS31281_-_1080p25%29.webm",
+    "loop": {
+      "start": 4,
+      "length": 26,
+      "crossfade": 2,
+      "height": 1000,
+      "crop": "iw:ih-80:0:80"
+    },
+    "note": "CROP drops the burnt-in timestamp; height 1000 keeps it 1920 wide, inside H.264 level 4.1."
   }
 ]

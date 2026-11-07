@@ -66,6 +66,10 @@ CROSSFADE seconds fade into the excerpt's opening, which ends on the frame the l
 `media/NAME.av1.mp4` (SVT-AV1, CRF 38) and `media/NAME.h264.mp4` (x264, CRF 23, for browsers without
 AV1). `media/` is git-ignored; `script/upload_media.sh` publishes it to the CDN (§6).
 
+Options: `SPEED=4` plays the excerpt four times as fast (START and LENGTH stay in source seconds, CROSSFADE is
+in loop seconds); `CROP=iw:ih-80:0:80` crops first, e.g. to drop a burnt-in timestamp; `ASSUME_BT709=1` retags
+mislabelled colour.
+
 It needs ffmpeg with `libsvtav1` and `libx264` (Homebrew's `ffmpeg` has both) and `bc`.
 
 **Tested here** on NASA's "GOLD Resources: ISS Airglow" (`GSFC_20180124_m12825_ISS_Airglow`, city lights
