@@ -64,7 +64,7 @@ const loadVideo = (video: HTMLVideoElement): Promise<boolean> => {
   })
 }
 
-const pictureOf = (slide: HTMLElement): HTMLImageElement | HTMLVideoElement => slide.querySelector<HTMLImageElement | HTMLVideoElement>(".picture")!
+const pictureOf = (slide: HTMLElement): HTMLImageElement | HTMLVideoElement => slide.querySelector("video") ?? slide.querySelector("img")!
 
 const load = (slide: HTMLElement): Promise<boolean> => {
   const picture = pictureOf(slide)
