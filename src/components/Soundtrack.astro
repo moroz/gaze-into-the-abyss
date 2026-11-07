@@ -1,15 +1,16 @@
 ---
 import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
+import { mediaUrl } from "../scripts/media"
 
 const tracks = (await getCollection("music")).sort(byPosition)
-const paths = tracks.map(({ data }) => `/music/${data.file}`)
-const ids = Object.fromEntries(tracks.map(({ id, data }) => [id, `/music/${data.file}`]))
+const paths = tracks.map(({ data }) => mediaUrl(data.path))
+const ids = Object.fromEntries(tracks.map(({ id, data }) => [id, mediaUrl(data.path)]))
 const credits = Object.fromEntries(tracks.map(({ data }) =>
-  [`/music/${data.file}`, { title: data.title, composer: data.composer, work: data.work, edition: data.edition, editionUrl: data.editionUrl }]))
+  [mediaUrl(data.path), { title: data.title, composer: data.composer, work: data.work, edition: data.edition, editionUrl: data.editionUrl }]))
 ---
 
-<audio preload="auto" data-tracks={JSON.stringify(paths)} data-credits={JSON.stringify(credits)} data-ids={JSON.stringify(ids)}></audio>
+<audio preload="auto" crossorigin="anonymous" data-tracks={JSON.stringify(paths)} data-credits={JSON.stringify(credits)} data-ids={JSON.stringify(ids)}></audio>
 
 <p class="hint" role="status" hidden>Touch the abyss and the abyss gazeth upon thee</p>
 
@@ -42,7 +43,7 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
   const credits = JSON.parse(audio.dataset.credits!)
   const edition = document.querySelector<HTMLAnchorElement>(".now-edition")!
   audio.addEventListener("loadstart", () => {
-    const credit = credits[new URL(audio.src).pathname]
+    const credit = credits[audio.src]
     if (!credit) return
     document.querySelector(".now-title")!.textContent = credit.title
     document.querySelector(".now-work")!.textContent = `${credit.composer}, ${credit.work}.`

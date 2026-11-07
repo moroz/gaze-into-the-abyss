@@ -23,7 +23,7 @@ pnpm dev
   `src/scripts/scene-schedule.ts` plays them in random order for random lengths, changing by a crossfade, a bloom from
   the centre, an ink-like dissolve or a petal wipe.
 - **Opening**: everything starts in total blackness, which lifts once the first background has loaded, or after 7 s.
-- **Music**: `public/music`, rendered from the recordings and MIDI editions listed in `src/data/music.json`. Beside the play
+- **Music**: MP3s on the media CDN, rendered from the recordings and MIDI editions listed in `src/data/music.json`. Beside the play
   button, while the controls show, a caption says what is playing and whose edition it is.
 - **Credits**: `/credits`, generated from both data files.
 - **Links**: `#seed=<anything>` replays a visit: every random choice (the image and scene order, holds, drifts,
@@ -61,8 +61,11 @@ credit; the credit comes from the entry's `edition` and `editionUrl` and is show
 entry in `src/data/music.json` (`firstBar` and `lastBar` cut an excerpt from a MIDI file), then render:
 
 ```bash
-uv run script/render_soundtrack.py
+uv run script/render_soundtrack.py                                    # writes media/music/<file>
+aws-vault exec medic -- script/upload_media.sh music media/music/NAME.mp3
 ```
+
+Put the printed path (without the origin) in the entry's `path`; a re-rendered track gets a new path.
 
 The script reads each source from `sources/` under the entry's `member` name, downloading it from `source` when it
 is missing (a zip's `member` is the file taken from it), and stops if the file's SHA-256 differs from the entry's

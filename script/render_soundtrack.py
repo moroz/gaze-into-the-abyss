@@ -22,7 +22,8 @@ import numpy as np
 
 SOUNDFONT = "/usr/share/sounds/sf2/FluidR3_GM.sf2"
 ROOT = Path(__file__).resolve().parent.parent
-MUSIC = ROOT / "public/music"
+# Git-ignored: script/upload_media.sh publishes the files to the media CDN, and music.json holds their paths there.
+MUSIC = ROOT / "media/music"
 PLAYLIST = ROOT / "src/data/music.json"
 # The source MIDI files and recordings, kept so a render needs no network; a missing one is downloaded from its source.
 SOURCES = ROOT / "sources"
@@ -209,6 +210,7 @@ def render(piece: Piece, work: Path) -> None:
         raise SystemExit(f"{piece.output}: the reverb mix clips; lower MIX_HEADROOM")
     finished = finish(wet, music_seconds, cut_short=piece.last_bar is not None)
     write_wav(work / "finished.wav", finished)
+    MUSIC.mkdir(parents=True, exist_ok=True)
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(work / "finished.wav"),
                     "-af", "loudnorm=I=-20:TP=-2:LRA=14", "-ar", str(RATE), "-c:a", "libmp3lame",
                     "-b:a", "96k", str(MUSIC / piece.output)], check=True)

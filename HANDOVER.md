@@ -138,7 +138,8 @@ frame at 1 s as the thumbnail.
 ## 6. A media CDN
 
 **Goal:** media lives at its own origin, so changing images, videos or music never redeploys the site, and
-deploys stay small. The music alone is 28 MB in `public/music`; the images are 6 MB in `src/assets/cosmos`.
+deploys stay small. Video and the 28 MB of music are on it now; the 6 MB of images in `src/assets/cosmos` are
+still built by Astro.
 
 **Built: CloudFront in front of a private S3 bucket**, on the default domain, in the `medic` AWS account
 (eu-central-1). Pulumi in `infra/` defines it; state lives in `s3://gaze-into-the-abyss-pulumi-state-eu-central-1/state`,
@@ -177,9 +178,9 @@ Start with the first option.
 **Wiring:**
 - Done: `src/scripts/media.ts` prefixes data paths with `PUBLIC_MEDIA_ORIGIN`, defaulting to the CloudFront
   domain, so no Netlify setting is needed unless the origin moves.
-- `script/make_loop.sh` writes to the git-ignored `media/` folder; `script/render_soundtrack.py` still
-  writes to `public/music` and should follow. `script/upload_media.sh` publishes from there.
-- Delete the MP3s from `public/music` once they're served from the CDN.
+- Done: `script/make_loop.sh` and `script/render_soundtrack.py` write to the git-ignored `media/` folder, and
+  `script/upload_media.sh` publishes from there. `music.json` holds each track's CDN `path`; the MP3s left
+  `public/music` (they stay in git history). The `<audio>` loads with `crossorigin`, so Web Audio may analyse it.
 
 **History.** The MP3s, OGG sources and images already committed stay in git history. If repo size matters,
 rewriting history (`git filter-repo`) is the only way to shrink clones, and it is disruptive. Probably not

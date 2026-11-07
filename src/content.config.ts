@@ -27,7 +27,9 @@ const music = defineCollection({
   loader: file("src/data/music.json"),
   schema: z.object({
     position: z.number().int().positive(),
+    // The rendered file's name in media/music, and its content-hashed path on the media CDN once uploaded.
     file: z.string().endsWith(".mp3"),
+    path: z.string().regex(/^music\/.+\.mp3$/),
     title: z.string(),
     composer: z.string(),
     work: z.string(),
