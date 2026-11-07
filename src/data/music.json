@@ -81,5 +81,21 @@
     "member": "rock-piper-ode-to-joy.mp3",
     "sha256": "e70bb98bf953ac0dae96ba8b316cf11afef13bef8f26c654585c781ec7a90a46",
     "slowdown": 0.5
+  },
+  {
+    "id": "ode-to-joy-1923",
+    "position": 6,
+    "file": "ode-to-joy-1923-adrift.mp3",
+    "path": "music/ode-to-joy-1923-adrift.745b05c4eba7.mp3",
+    "title": "Joy in 1923, Adrift",
+    "composer": "Ludwig van Beethoven",
+    "work": "Symphony No. 9 in D minor, Op. 125, IV, the choral Ode to Joy (1824), sung in German",
+    "arrangement": "A 52-second excerpt at half the recorded tempo, at its pitch.",
+    "edition": "1923 recording from a 78 rpm record, public domain",
+    "editionUrl": "https://commons.wikimedia.org/wiki/File:Ode_to_Joy_1923.opus",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Ode_to_Joy_1923.opus",
+    "member": "ode-to-joy-1923.opus",
+    "sha256": "622ba0a37793aa842565bf133834421ccfe8280e751f5946b9dd68333a069a0a",
+    "slowdown": 0.5
   }
 ]
