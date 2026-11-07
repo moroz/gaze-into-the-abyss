@@ -2,15 +2,22 @@ import { defineCollection } from "astro:content"
 import { z } from "astro/zod"
 import { file } from "astro/loaders"
 
-const cosmos = defineCollection({
-  loader: file("src/data/cosmos.json"),
+// A background is an image or a looping video. Video paths are relative to the media origin (see media.ts).
+// The trip overlay always runs. overlay "calm" gives a video a breathing oversaturation; "psychedelic" (the default
+// for images) gives it the hue drift.
+const backgrounds = defineCollection({
+  loader: file("src/data/backgrounds.json"),
   schema: ({ image }) => z.object({
     position: z.number().int().positive(),
-    image: image(),
     title: z.string(),
-    credit: z.string(),
-    nasaId: z.string(),
-  }),
+    author: z.string(),
+    licence: z.string(),
+    licenceUrl: z.url().optional(),
+    sourceUrl: z.url(),
+    image: image().optional(),
+    video: z.object({ av1: z.string().endsWith(".av1.mp4"), h264: z.string().endsWith(".h264.mp4") }).optional(),
+    overlay: z.enum(["calm", "psychedelic"]).optional(),
+  }).refine((entry) => (entry.image === undefined) !== (entry.video === undefined), "needs exactly one of image and video"),
 })
 
 const music = defineCollection({
@@ -34,4 +41,4 @@ const music = defineCollection({
   }),
 })
 
-export const collections = { cosmos, music }
+export const collections = { backgrounds, music }

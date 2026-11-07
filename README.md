@@ -10,10 +10,11 @@ pnpm dev
 
 ## What it is made of
 
-- **Imagery**: public-domain NASA images in `src/assets/cosmos`, listed with their credits in
-  `src/data/cosmos.json`. Astro builds a responsive set of sizes for each one. They play in a fresh random order on
-  every visit, each for a random stretch with a random drift, changing by a crossfade, a dip through black, a bloom
-  or a slow dissolve.
+- **Imagery**: NASA images in `src/assets/cosmos` and looping, oversaturated videos of bison and desert served from
+  a CloudFront CDN (`infra/`), all listed with their credits in `src/data/backgrounds.json`. Astro builds a
+  responsive set of sizes for each image. They play in a fresh random order on every visit, each for a random
+  stretch, changing by a crossfade, a dip through black, a bloom or a slow dissolve; the one on screen is credited
+  beside the music.
 - **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with four scenes over the imagery: a liquid
   kaleidoscope (`liquid`), a Kali-set nebula folded into eight mirrors (`nebula`), a three-mirror kaleidoscope that
   tiles the screen (`lattice`), and the Mandelbrot boundary with its Julia sets in six mirrors (`fractal`).
@@ -36,8 +37,16 @@ for video: a loop is an excerpt with a crossfade, so it adapts the work. Check t
 the collection. Credit the title, author, source and licence; a share-alike item makes its loop share-alike
 too, so say so in its credit.
 
-Put an image's file in `src/assets/cosmos` and add an entry to
-`src/data/cosmos.json`. The slideshow and the credits page pick it up from there.
+Put an image's file in `src/assets/cosmos` and add an entry to `src/data/backgrounds.json`. For a video, cut a loop
+and upload it, then add an entry whose `video` holds the two printed paths (without the origin):
+
+```bash
+script/make_loop.sh ~/Downloads/clip.mp4 NAME START LENGTH CROSSFADE HEIGHT   # writes media/NAME.{av1,h264}.mp4
+aws-vault exec medic -- script/upload_media.sh videos media/NAME.av1.mp4 media/NAME.h264.mp4
+```
+
+A video's `overlay` is `calm` (breathing oversaturation, the default) or `psychedelic` (the hue drift). The slideshow
+and the credits page pick everything up from the data file.
 
 ## Changing the music
 

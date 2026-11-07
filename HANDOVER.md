@@ -1,13 +1,13 @@
 # Handover: looping videos, credits beside the music, and a media CDN
 
-State on 2026-11-07. `main` is at `e1fdd6e`: seeded randomness (`#seed=`), random image and scene order,
-random transitions, and the opening from black. This branch, `wip/videos`, adds only
-`script/make_loop.sh` and this file. Nothing on the site changes yet.
+State on 2026-11-07, merged into `main`. Six video loops (four of bison, two desert) play among the images from
+the CloudFront CDN, with their credits beside the music. §3–§6 describe what was built.
 
 ## What you asked for
 
 1. **Video backgrounds** among the images, chosen to evoke nostalgia.
-2. **A playing video is the star:** the psychedelic overlay tones down while it plays.
+2. **A playing video is the star.** Tried and reversed: dimming the overlay for video read as the trip stopping,
+   and the trip should never stop. Videos run oversaturated instead (§4).
 3. **Visual credits in the music caption area**, beside the play button.
 4. **A dedicated CDN for media**, so changing imagery, video or music doesn't mean redeploying it.
 
@@ -74,62 +74,39 @@ from the last frame back to the first measured 7.3, the same as an ordinary movi
 that clip (median 6.7, maximum 15), so the seam is invisible. At 1080p expect roughly 2–2.5× those sizes.
 It took about 90 seconds for both encodes on four cores; your Mac will be quicker.
 
-## 3. Wiring video into the site (not started)
+## 3. Video in the site
 
-Planned design:
+- **Data.** The `cosmos` collection is now `backgrounds` (`src/data/backgrounds.json`). An entry has `image` *or*
+  `video` (`{ av1, h264 }`, paths relative to the media origin), and every entry has `title`, `author`, `licence`,
+  optional `licenceUrl`, and `sourceUrl`. `src/scripts/media.ts` prefixes video paths with `PUBLIC_MEDIA_ORIGIN`,
+  defaulting to the CloudFront domain. `handover/videos.json` records where each loop came from and how it was cut.
+- **Markup** (`Slideshow.astro`): a video slide is `<video muted playsinline loop preload="none">` holding the two
+  URLs as data attributes. Every slide carries its credit as `data-credit`.
+- **Loading** (`slideshow.ts`): `load()` now reports success. A video gets an AV1 `<source>` then an H.264 one and
+  starts playing, muted and still invisible, because iOS buffers only a playing video; it is ready on
+  `canplaythrough`, within 60 s. A background that fails (no source decodes, Low Power Mode refuses playback, an
+  image fails to decode) is skipped for the next one. A video pauses once its leaving transition ends.
+- **Reduced motion:** video slides are left out of the rotation.
+- **Stacking:** `.slides` has `isolation: isolate`. It used to get its stacking context by accident from the hue
+  animation's filter; without one, the active slide's `z-index` lifts it over the trip canvas.
 
-- **Data.** Rename the `cosmos` collection to `backgrounds` (or keep the name) and let an entry be an image
-  *or* a video:
-  - `image: image().optional()`
-  - `video: z.object({ av1: z.string(), h264: z.string() }).optional()` holding CDN URLs
-  - a `.refine` requiring exactly one of them
-  - `author` and `licence` (with its URL), which CC credit needs
-  - generalise `nasaId` into a `sourceUrl`, since not everything comes from NASA
-- **Markup** (`Slideshow.astro`). A video slide renders
-  `<video muted playsinline loop preload="none" data-av1 data-h264>`. Muted, inline video autoplays
-  everywhere, iOS included.
-- **Loading** (`slideshow.ts`). `load()` already gates every change on the next background being ready. For
-  a video:
-  - add `<source>` elements, AV1 first with `type='video/mp4; codecs="av01.0.08M.08"'`, then H.264 with
-    `codecs="avc1.640029"`
-  - call `video.load()` and resolve on `canplaythrough`
-  - make `load` report failure, and add a patience timeout (say 60 s). Then a background that never loads
-    is skipped instead of stalling the slideshow; currently a failed image decode simply shows it anyway.
+## 4. Video colouring
 
-  The black openings and dip-to-black transitions cover the buffering, as you said.
-- **Playback.** `play()` in `show()`. Pause the leaving slide when its transition ends, so off-screen
-  videos don't decode.
-- **Reduced motion.** Under `prefers-reduced-motion`, leave video entries out of the shuffle; the drift and
-  hue animations already stop there.
-- **Randomness.** No change needed: videos join the same `slides` stream, so `#seed=` covers them.
+The trip overlay always runs at full strength. Instead, each video's `overlay` field picks its colouring:
 
-## 4. The video as the star
+- `calm` (the default for video): saturation breathes between 1.8× and 2.6× over 40 s, with a touch more
+  contrast. Oversaturated old footage under the trip looks delightfully uncanny.
+- `psychedelic` (the default for images; set on the Swan Lake Flats bison): the 180 s hue drift, at 2.2×
+  saturation for video against the images' 1.3×.
 
-When a video slide becomes active, set `data-background="video"` on `.abyss` (clear it for images). Then
-CSS:
+The hue drift now runs on each picture from one shared `--hue-delay`, so it stays in step across slides.
 
-- **Overlay.** `.abyss[data-background="video"] .trip` drops from `.75` (breathing `.45`–`1`) to about
-  `.12`–`.2`, with a slow transition (3–4 s) so the change itself is a gentle fade. Consider pausing its
-  `breathe` animation too.
-- **Hue drift.** Turn off `.slides`' hue rotation for video slides. Old footage should keep its own colours,
-  and a hue shift fights the nostalgia. Images can keep it.
-- **Image filter.** Lighten the `brightness(.8) saturate(1.3) contrast(1.05)` filter (or drop it) for video.
+## 5. Credits beside the music
 
-A further option is for the shader scheduler to prefer its calmest scene, `liquid` at low exposure, during
-video, via a flag `sceneSchedule` reads. Start with opacity alone and judge.
-
-## 5. Visual credits beside the music
-
-`Soundtrack.astro` already has the caption next to the play button:
-`<p class="now-playing">` with `.now-title`, `.now-work` and `.now-edition`, filled from the audio element's
-`data-credits`, and shown while the controls show. Add a second line, e.g.
-`<p class="now-showing"><strong class="now-showing-title"></strong> <a class="now-showing-credit"></a></p>`:
-
-- `slideshow.ts` dispatches an `abyss:background` event carrying the entry's title, credit and source URL
-  whenever a slide arrives. Put them on each `.slide` as data attributes in `Slideshow.astro`.
-- A small listener fills the line. Style it like `.now-playing` so both fade with the controls.
-- `/credits` keeps listing everything; for videos, show a poster frame or a `preload="metadata"` mini
-  video instead of `<Image>`.
+The slideshow dispatches `abyss:background` with the arriving slide's credit. `Soundtrack.astro` shows it in a
+`.now-showing` caption above `.now-playing`: the title links to the source, then the author and the licence (linked
+when it has a URL). Both captions fade with the controls. `/credits` lists every background; a video shows its
+frame at 1 s as the thumbnail.
 
 ## 6. A media CDN
 
@@ -181,5 +158,10 @@ worth it for a personal project.
 
 ## Not committed
 
-The test loops (`public/videos/airglow-test.*`) and the source clip stayed on the cloud machine. Rerun the
-script on your Mac to reproduce them.
+The encoded loops live in the git-ignored `media/` folder and on the CDN. To rebuild one, download its `file` from
+`handover/videos.json` and rerun `make_loop.sh` with its `loop` settings, then `upload_media.sh videos …`. The
+same bytes give the same URL.
+
+`make_loop.sh`'s crossfade leaves a residual step of under one grey level at the loop seam. A frame-exact
+blend removes it but moves a slightly larger step two frames earlier; it was not worth pursuing, since it is
+invisible.

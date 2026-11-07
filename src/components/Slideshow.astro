@@ -1,22 +1,28 @@
 ---
 import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
+import { mediaUrl } from "../scripts/media"
 import { getImage } from "astro:assets"
 
 const DRIFT_ZOOM_SIZES = "118vw"
 
 const slides = await Promise.all(
-  (await getCollection("cosmos")).sort(byPosition).map(async ({ data }) => {
-    const image = await getImage({ src: data.image, widths: [1280, 1920, 2560, 3840], format: "webp", quality: 80 })
-    return { src: image.src, srcset: image.srcSet.attribute }
+  (await getCollection("backgrounds")).sort(byPosition).map(async ({ data }) => {
+    const credit = { title: data.title, author: data.author, licence: data.licence, licenceUrl: data.licenceUrl, sourceUrl: data.sourceUrl }
+    const overlay = data.overlay ?? (data.video ? "calm" : "psychedelic")
+    if (data.video) return { kind: "video", overlay, credit, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) } as const
+    const image = await getImage({ src: data.image!, widths: [1280, 1920, 2560, 3840], format: "webp", quality: 80 })
+    return { kind: "image", overlay, credit, src: image.src, srcset: image.srcSet.attribute } as const
   }),
 )
 ---
 
 <div class="slides">
   {slides.map((slide) => (
-    <div class="slide">
-      <img data-src={slide.src} data-srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" />
+    <div class="slide" data-kind={slide.kind} data-overlay={slide.overlay} data-credit={JSON.stringify(slide.credit)}>
+      {slide.kind === "video"
+        ? <video class="picture" muted playsinline loop preload="none" disablepictureinpicture data-av1={slide.av1} data-h264={slide.h264}></video>
+        : <img class="picture" data-src={slide.src} data-srcset={slide.srcset} sizes={DRIFT_ZOOM_SIZES} alt="" decoding="async" />}
     </div>
   ))}
 </div>
@@ -25,18 +31,31 @@ const slides = await Promise.all(
   import { runSlideshow } from "../scripts/slideshow"
 
   const container = document.querySelector<HTMLElement>(".slides")!
-  runSlideshow(container, [...container.querySelectorAll<HTMLElement>(".slide")]).then(() => {
+  // Motion-sensitive visitors get only the still images.
+  const stillOnly = matchMedia("(prefers-reduced-motion: reduce)").matches
+  const slides = [...container.querySelectorAll<HTMLElement>(".slide")].filter((slide) => !stillOnly || slide.dataset.kind !== "video")
+  runSlideshow(container, slides).then(() => {
     document.dispatchEvent(new Event("abyss:first-image"))
     document.documentElement.dataset.firstImage = "shown"
   })
 </script>
 
 <style>
-  .slides { position: absolute; inset: 0; animation: hue 180s linear infinite; }
+  /* Its own stacking context, so the active slide's z-index orders it among the slides and never lifts it over the trip. */
+  .slides { position: absolute; inset: 0; isolation: isolate; }
   .slide { position: absolute; inset: 0; opacity: 0; }
   .slide:global(.is-active) { z-index: 1; opacity: 1; }
-  img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.8) saturate(1.3) contrast(1.05); transform: var(--from); }
-  .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: drift var(--drift-ms) ease-in-out both; }
+  .picture { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  /* Images, and videos paired with the psychedelia, take the trip's colouring and its slow hue drift. The drift runs
+     on every picture from one shared delay, so it stays in step across slides. */
+  .slide[data-overlay="psychedelic"] .picture { filter: brightness(.8) saturate(1.3) contrast(1.05); animation: hue 180s linear var(--hue-delay, 0s) infinite; }
+  /* Videos run oversaturated, for an uncanny glow: a calm one breathes between 1.8 and 2.6 times its colour, and one
+     paired with the psychedelia takes the hue drift at a stronger saturation than the images. */
+  .slide[data-kind="video"][data-overlay="calm"] .picture { animation: oversaturate 40s ease-in-out var(--hue-delay, 0s) infinite alternate; }
+  .slide[data-kind="video"][data-overlay="psychedelic"] .picture { animation: hue-oversaturated 180s linear var(--hue-delay, 0s) infinite; }
+  img { transform: var(--from); }
+  .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: drift var(--drift-ms) ease-in-out both, hue 180s linear var(--hue-delay, 0s) infinite; }
 
   .slide[data-transition="crossfade"]:global(.is-active) { animation: fade-in 4s ease-in-out both; }
   .slide[data-transition="crossfade"]:global(.is-leaving) { animation: fade-out 4s ease-in-out both; }
@@ -54,10 +73,21 @@ const slides = await Promise.all(
     to { opacity: 1; transform: none; filter: none; }
   }
   @keyframes drift { from { transform: var(--from); } to { transform: var(--to); } }
-  @keyframes hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+  @keyframes hue {
+    from { filter: brightness(.8) saturate(1.3) contrast(1.05) hue-rotate(0deg); }
+    to { filter: brightness(.8) saturate(1.3) contrast(1.05) hue-rotate(360deg); }
+  }
+  @keyframes oversaturate {
+    from { filter: saturate(1.8) contrast(1.08); }
+    to { filter: saturate(2.6) contrast(1.12); }
+  }
+  @keyframes hue-oversaturated {
+    from { filter: brightness(.85) saturate(2.2) contrast(1.08) hue-rotate(0deg); }
+    to { filter: brightness(.85) saturate(2.2) contrast(1.08) hue-rotate(360deg); }
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    .slides, img { animation: none !important; }
+    .picture, .slide:global(.is-active) img, .slide:global(.is-leaving) img { animation: none !important; }
     .slide[data-transition="bloom"]:global(.is-active) { animation-name: fade-in; }
   }
 </style>

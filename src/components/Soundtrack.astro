@@ -18,7 +18,10 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
     <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
     <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11a.75.75 0 0 0 1.14.64l9-5.5a.75.75 0 0 0 0-1.28l-9-5.5A.75.75 0 0 0 4 2.5Z" /></svg>
   </button>
-  <p class="now-playing"><strong class="now-title"></strong> <span class="now-work"></span> <a class="now-edition" target="_blank" rel="noopener"></a></p>
+  <div class="captions">
+    <p class="now-showing" hidden><a class="showing-title" target="_blank" rel="noopener"></a> <span class="showing-author"></span> <a class="showing-licence" target="_blank" rel="noopener"></a></p>
+    <p class="now-playing"><strong class="now-title"></strong> <span class="now-work"></span> <a class="now-edition" target="_blank" rel="noopener"></a></p>
+  </div>
 </div>
 
 <script>
@@ -45,6 +48,21 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
     edition.textContent = credit.edition
     edition.href = credit.editionUrl
   })
+
+  // The background on screen, announced by the slideshow as each one arrives.
+  const showing = document.querySelector<HTMLElement>(".now-showing")!
+  const showingTitle = document.querySelector<HTMLAnchorElement>(".showing-title")!
+  const showingLicence = document.querySelector<HTMLAnchorElement>(".showing-licence")!
+  document.addEventListener("abyss:background", (event) => {
+    const { title, author, licence, licenceUrl, sourceUrl } = (event as CustomEvent).detail
+    showingTitle.textContent = title
+    showingTitle.href = sourceUrl
+    document.querySelector(".showing-author")!.textContent = `${author}.`
+    showingLicence.textContent = licence
+    if (licenceUrl) showingLicence.href = licenceUrl
+    else showingLicence.removeAttribute("href")
+    showing.hidden = false
+  })
 </script>
 
 <style>
@@ -59,8 +77,13 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
   .music-toggle:global(.is-playing) .icon-pause { display: block; }
   :global(.is-idle) .music-toggle:not(:focus-visible) { opacity: 0; }
 
-  .now-playing { margin: 0 0 6px; padding: 8px 14px; border-radius: 14px; background: #000000b3; color: #ffffffd9; font-size: 12px; line-height: 1.45; transition: opacity .6s; }
-  .now-title { color: #ffffff; font-weight: 600; letter-spacing: .04em; }
+  .captions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; margin-bottom: 6px; }
+  .now-showing, .now-playing { margin: 0; padding: 8px 14px; border-radius: 14px; background: #000000b3; color: #ffffffd9; font-size: 12px; line-height: 1.45; transition: opacity .6s; }
+  .now-showing[hidden] { display: none; }
+  .now-title, .showing-title { color: #ffffff; font-weight: 600; letter-spacing: .04em; }
+  .showing-title { text-decoration: none; }
   .now-edition { display: block; color: #9fe9ff; }
-  :global(.is-idle) .music:not(:hover, :focus-within) .now-playing { opacity: 0; pointer-events: none; }
+  .showing-licence { color: #9fe9ff; }
+  .showing-licence:not([href]) { color: inherit; }
+  :global(.is-idle) .music:not(:hover, :focus-within) :is(.now-playing, .now-showing) { opacity: 0; pointer-events: none; }
 </style>

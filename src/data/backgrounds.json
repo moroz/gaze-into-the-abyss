@@ -1,0 +1,112 @@
+[
+  {
+    "id": "galactic-center",
+    "position": 1,
+    "title": "A Cauldron of Stars at the Galaxy Center",
+    "author": "NASA/JPL-Caltech",
+    "licence": "Public domain",
+    "sourceUrl": "https://images.nasa.gov/details/PIA03654",
+    "image": "../assets/cosmos/galactic-center.webp"
+  },
+  {
+    "id": "peony",
+    "position": 2,
+    "title": "Peony Nebula Star Settles for Silver Medal",
+    "author": "NASA/JPL-Caltech/Potsdam Univ.",
+    "licence": "Public domain",
+    "sourceUrl": "https://images.nasa.gov/details/PIA10955",
+    "image": "../assets/cosmos/peony.webp"
+  },
+  {
+    "id": "spider",
+    "position": 3,
+    "title": "The Spider Nebula",
+    "author": "NASA/JPL-Caltech/2MASS",
+    "licence": "Public domain",
+    "sourceUrl": "https://images.nasa.gov/details/PIA20357",
+    "image": "../assets/cosmos/spider.webp"
+  },
+  {
+    "id": "trifid",
+    "position": 4,
+    "title": "Storm of Stars in the Trifid Nebula",
+    "author": "NASA/JPL-Caltech/UCLA",
+    "licence": "Public domain",
+    "sourceUrl": "https://images.nasa.gov/details/PIA17834",
+    "image": "../assets/cosmos/trifid.webp"
+  },
+  {
+    "id": "bison-swan-lake-flats",
+    "position": 5,
+    "title": "Bison at Swan Lake Flats, winter",
+    "author": "Yellowstone National Park, National Park Service",
+    "licence": "Public domain",
+    "sourceUrl": "https://www.nps.gov/media/video/view.htm?id=14E3D80F-155D-451F-676BF3AD738C2247",
+    "video": {
+      "av1": "videos/bison-swan-lake-flats.4f8155a77ddc.av1.mp4",
+      "h264": "videos/bison-swan-lake-flats.752809070c24.h264.mp4"
+    },
+    "overlay": "psychedelic"
+  },
+  {
+    "id": "bison-grazing-snow",
+    "position": 6,
+    "title": "Bison grazing in snow, Yellowstone",
+    "author": "Yathin S Krishnappa",
+    "licence": "CC BY-SA 3.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bison_bison_grazing_in_snow_(Yellowstone).ogv",
+    "video": {
+      "av1": "videos/bison-grazing-snow.336cf62f500c.av1.mp4",
+      "h264": "videos/bison-grazing-snow.f7a6248b7889.h264.mp4"
+    }
+  },
+  {
+    "id": "bison-lamar-valley-a",
+    "position": 7,
+    "title": "Bison in Lamar Valley, summer",
+    "author": "Yellowstone National Park, National Park Service",
+    "licence": "Public domain",
+    "sourceUrl": "https://www.nps.gov/media/video/view.htm?id=FD5CDC9C-155D-451F-67CEF3254947F134",
+    "video": {
+      "av1": "videos/bison-lamar-valley-a.60e055161c4a.av1.mp4",
+      "h264": "videos/bison-lamar-valley-a.9f27e36ec953.h264.mp4"
+    }
+  },
+  {
+    "id": "bison-lamar-valley-b",
+    "position": 8,
+    "title": "Bison in Lamar Valley, summer",
+    "author": "Yellowstone National Park, National Park Service",
+    "licence": "Public domain",
+    "sourceUrl": "https://www.nps.gov/media/video/view.htm?id=FE0B0B54-155D-451F-6723D2C9538825F8",
+    "video": {
+      "av1": "videos/bison-lamar-valley-b.062224d82c91.av1.mp4",
+      "h264": "videos/bison-lamar-valley-b.345270d27916.h264.mp4"
+    }
+  },
+  {
+    "id": "joshua-tree-sunset",
+    "position": 9,
+    "title": "Sunset near the West Entrance, Joshua Tree",
+    "author": "Joshua Tree National Park, National Park Service",
+    "licence": "Public domain",
+    "sourceUrl": "https://www.nps.gov/jotr/learn/photosmultimedia/westentrancesunclips.htm",
+    "video": {
+      "av1": "videos/joshua-tree-sunset.5ca5e75e3d53.av1.mp4",
+      "h264": "videos/joshua-tree-sunset.2ea1830a18ea.h264.mp4"
+    }
+  },
+  {
+    "id": "steens-mountain-clouds",
+    "position": 10,
+    "title": "Time-lapse of clouds above Steens Mountain",
+    "author": "BLM Oregon & Washington",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Time_Lapse_Clouds_above_Steens_Mountain_(36203941112).webm",
+    "video": {
+      "av1": "videos/steens-mountain-clouds.6d91e3cdcf11.av1.mp4",
+      "h264": "videos/steens-mountain-clouds.f8c7a5d77bc3.h264.mp4"
+    }
+  }
+]

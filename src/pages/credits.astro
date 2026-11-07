@@ -1,10 +1,11 @@
 ---
 import { getCollection } from "astro:content"
 import { byPosition } from "../scripts/by-position"
+import { mediaUrl } from "../scripts/media"
 import { Image } from "astro:assets"
 import Base from "../layouts/Base.astro"
 
-const images = (await getCollection("cosmos")).sort(byPosition)
+const backgrounds = (await getCollection("backgrounds")).sort(byPosition)
 const tracks = (await getCollection("music")).sort(byPosition)
 ---
 
@@ -14,14 +15,19 @@ const tracks = (await getCollection("music")).sort(byPosition)
     <p><a href="/">Back into the abyss</a></p>
 
     <h2>Imagery</h2>
-    <p>Public domain, from the <a href="https://images.nasa.gov">NASA Image and Video Library</a>.</p>
+    <p>
+      Public domain or Creative Commons. The videos are excerpts looped with a crossfade; a share-alike original makes
+      its loop share-alike under the same licence.
+    </p>
     <ul class="images">
-      {images.map(({ data }) => (
+      {backgrounds.map(({ data }) => (
         <li>
-          <Image src={data.image} alt="" width={160} height={100} fit="cover" format="webp" />
+          {data.video
+            ? <video src={`${mediaUrl(data.video.h264)}#t=1`} muted playsinline preload="metadata" aria-hidden="true"></video>
+            : <Image src={data.image!} alt="" width={160} height={100} fit="cover" format="webp" />}
           <div>
-            <a href={`https://images.nasa.gov/details/${data.nasaId}`}>{data.title}</a>
-            <span>{data.credit}</span>
+            <a href={data.sourceUrl}>{data.title}</a>
+            <span>{data.author}. {data.licenceUrl ? <a href={data.licenceUrl}>{data.licence}</a> : data.licence}.</span>
           </div>
         </li>
       ))}
@@ -54,7 +60,7 @@ const tracks = (await getCollection("music")).sort(byPosition)
   .tracks li { flex-direction: column; align-items: flex-start; gap: 2px; }
   li div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   li span { color: #9fb0c4; font-size: 14px; overflow-wrap: anywhere; }
-  img { flex: none; width: 120px; height: 75px; object-fit: cover; border-radius: 6px; }
+  img, video { flex: none; width: 120px; height: 75px; object-fit: cover; border-radius: 6px; }
 
   @media (max-width: 480px) {
     .images li { flex-direction: column; align-items: flex-start; }
