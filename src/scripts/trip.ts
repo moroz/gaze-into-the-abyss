@@ -53,6 +53,11 @@ export class Trip {
     this.drawnAt = undefined
   }
 
+  // Compiles the shader up front, so a failure shows when the stage sets up rather than mid-frame.
+  build(gl: WebGL2RenderingContext): void {
+    this.program ??= build(gl, this.fragment, ["resolution", "time", "fromScene", "toScene", "blend", "transition"], VERTEX_100)
+  }
+
   opacity(now: number): number {
     if (this.options.still) return STILL_OPACITY
     const [low, high] = BREATHE
@@ -71,8 +76,8 @@ export class Trip {
     this.output = sized(gl, this.output, width, height)
     if (!this.due(now) && !resized) return this.output
 
-    this.program ??= build(gl, this.fragment, ["resolution", "time", "fromScene", "toScene", "blend", "transition"], VERTEX_100)
-    const { program, uniforms } = this.program
+    this.build(gl)
+    const { program, uniforms } = this.program!
     drawInto(gl, this.output, width, height)
     gl.useProgram(program)
     gl.uniform2f(uniforms.resolution, width, height)

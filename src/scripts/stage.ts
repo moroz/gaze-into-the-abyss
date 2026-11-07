@@ -193,7 +193,7 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
   const track = <T>(promise: Promise<T>): Promise<T> => {
     if (!rendering) return promise
     pending.add(promise)
-    promise.finally(() => pending.delete(promise))
+    promise.finally(() => pending.delete(promise)).catch(() => {})
     return promise
   }
 
@@ -205,20 +205,9 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
     frame = requestAnimationFrame(draw)
   }
 
-  const slideshow: Slideshow = runSlideshow(slides, wake, track)
+  let slideshow: Slideshow
   const trip = new Trip(fragment, { still, rendering })
-
   let liftAt: number | undefined
-  const lift = (): void => {
-    liftAt ??= performance.now()
-    wake()
-  }
-  slideshow.started.then(() => {
-    document.dispatchEvent(new Event("abyss:first-image"))
-    document.documentElement.dataset.firstImage = "shown"
-    lift()
-  })
-  setTimeout(lift, VEIL_PATIENCE_MS)
 
   let programs: { composite: Program; yuv: Program; warp: WarpPrograms }
   let empty: WebGLTexture
@@ -246,6 +235,7 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
     picture = undefined
     packed = undefined
     trip.reset()
+    trip.build(gl)
   }
 
   const release = (slide: Slide, resources: Held): void => {
@@ -283,8 +273,9 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
       canvas.height = height
     }
     const showings = slideshow.onScreen().slice(-2)
-    const shown = new Set(showings.map(({ slide }) => slide))
-    for (const [slide, resources] of held) if (!shown.has(slide)) release(slide, resources)
+    const upcoming = slideshow.upcoming()
+    const kept = new Set([...showings.map(({ slide }) => slide), upcoming])
+    for (const [slide, resources] of held) if (!kept.has(slide)) release(slide, resources)
 
     const seconds = now / 1000
     const layers = showings.map((showing) => {
@@ -298,8 +289,14 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
         const footage = slide.video.footage()
         const resources = held.get(slide) ?? {}
         held.set(slide, resources)
-        if (footage) resources.warp ??= new Warp(gl, programs.warp)
-        const drawn = footage ? resources.warp!.draw(now, footage, showing, width, height) : resources.warp?.latest
+        let drawn = resources.warp?.latest
+        try {
+          if (footage) resources.warp ??= new Warp(gl, programs.warp)
+          if (footage) drawn = resources.warp!.draw(now, footage, showing, width, height)
+        } catch (error) {
+          // One video failing (a frame the page may not read, say) costs only its own layer, not the whole stage.
+          console.error(error)
+        }
         if (drawn) {
           texture = drawn.texture
           gl.bindTexture(gl.TEXTURE_2D, texture)
@@ -370,12 +367,20 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
       gl.bindTexture(gl.TEXTURE_2D, null)
     }
 
-    if (rendering && capturing) pack(width, height)
+    // The next image goes up to the GPU during a hold, not on the frame it starts to arrive: uploading 4K and its
+    // mipmaps takes long enough to drop frames, and a transition is where that would show.
+    if (upcoming && !upcoming.video && !showings.some((showing) => busy(showing, now))) imageTexture(upcoming)
+
+    if (rendering && capturing) {
+      pack(width, height)
+      packedFrames++
+    }
     return !still || veil > 0 || showings.some((showing) => busy(showing, now)) || liftAt === undefined
   }
 
   // Render mode: the frame as yuv420p bytes, ready to read back.
   let capturing = false
+  let packedFrames = 0
   const pack = (width: number, height: number): void => {
     packed = sized(gl, packed, width / 4, (height * 3) / 2)
     drawInto(gl, packed, packed.width, packed.height)
@@ -390,7 +395,14 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
   const draw = (now: number): void => {
     scheduled = false
     if (gl.isContextLost()) return
-    if (render(now)) wake()
+    let moving = true
+    try {
+      moving = render(now)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      if (moving) wake()
+    }
   }
 
   canvas.addEventListener("webglcontextlost", (event) => {
@@ -399,17 +411,39 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
     scheduled = false
   })
   canvas.addEventListener("webglcontextrestored", () => {
-    setUp()
+    try {
+      setUp()
+    } catch (error) {
+      console.error(error)
+      return
+    }
     wake()
   })
   window.addEventListener("resize", wake)
 
-  setUp()
+  try {
+    setUp()
+  } catch (error) {
+    console.error(error)
+    return false
+  }
+  slideshow = runSlideshow(slides, wake, track)
+  const lift = (): void => {
+    liftAt ??= performance.now()
+    wake()
+  }
+  slideshow.started.then(() => {
+    document.dispatchEvent(new Event("abyss:first-image"))
+    document.documentElement.dataset.firstImage = "shown"
+    lift()
+  })
+  setTimeout(lift, VEIL_PATIENCE_MS)
   wake()
 
   if (rendering) {
     let bytes: Uint8Array<ArrayBuffer> | undefined
     let inFlight = Promise.resolve()
+    let sentFrames = 0
     Object.assign(window, {
       __abyss: {
         // Awaited by the renderer's clock before each frame: loads in flight, then the video frames to show.
@@ -428,6 +462,9 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
         // draws (a Blob body uploads several times faster than an ArrayBuffer); flush() waits for the last.
         async send(url: string): Promise<[number, number]> {
           if (!packed) throw new Error("no frame packed: call capture(true) before stepping")
+          // A stage that stopped drawing would otherwise have its last frame encoded over and over.
+          if (packedFrames === sentFrames) throw new Error("no new frame drawn since the last one sent")
+          sentFrames = packedFrames
           const clock = (window as unknown as { __clock: { realNow: () => number } }).__clock
           const started = clock.realNow()
           const size = packed.width * packed.height * 4

@@ -162,6 +162,8 @@ export interface Slideshow {
   onScreen(): Showing[]
   // Seconds into the shared hue drift at page load, so every picture's drift stays in step.
   hueDelay: number
+  // The background loaded and waiting for its turn, if any.
+  upcoming(): Slide | undefined
   // Resolves once the first background is on screen.
   started: Promise<void>
 }
@@ -186,6 +188,7 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
 
   const hueDelay = random() * 180
   let current: Showing | undefined
+  let upcoming: Slide | undefined
   const leaving: Showing[] = []
 
   const load = (slide: Slide): Promise<boolean> => track(slide.video ? slide.video.load() : loadImage(slide))
@@ -199,7 +202,8 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
       leaving.push(left)
       setTimeout(() => {
         leaving.splice(leaving.indexOf(left), 1)
-        if (current?.slide !== left.slide) left.slide.video?.pause()
+        // Not one that is back on screen, or loaded to come back next: pausing that would leave it cold.
+        if (current?.slide !== left.slide && upcoming !== left.slide) left.slide.video?.pause()
         onChange()
       }, TRANSITION_MS[transition])
     }
@@ -233,10 +237,12 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
 
   const continueAfter = (holdMs: number): void => {
     const ready = prepare()
+    ready.then((slide) => { upcoming = slide })
     setTimeout(async () => {
-      const upcoming = await ready
+      const next = await ready
+      upcoming = undefined
       const hold = between(...HOLD_MS)
-      if (upcoming) show(upcoming, pick(TRANSITIONS), hold)
+      if (next) show(next, pick(TRANSITIONS), hold)
       continueAfter(hold)
     }, holdMs)
   }
@@ -252,5 +258,5 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
     continueAfter(hold)
   })()
 
-  return { onScreen: () => (current ? [...leaving, current] : []), hueDelay, started }
+  return { onScreen: () => (current ? [...leaving, current] : []), upcoming: () => upcoming, hueDelay, started }
 }

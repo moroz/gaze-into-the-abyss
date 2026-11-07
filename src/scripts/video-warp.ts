@@ -175,8 +175,10 @@ export class Warp {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, footage.flip)
     const size = `${footage.width}x${footage.height}`
     if (size !== this.frameSize) {
+      while (gl.getError() !== gl.NO_ERROR) { /* drain older errors */ }
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, footage.source)
-      this.frameSize = size
+      // Kept only once a frame really went up: every later update is a texSubImage2D of that size.
+      if (gl.getError() === gl.NO_ERROR) this.frameSize = size
     } else {
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, footage.source)
     }
