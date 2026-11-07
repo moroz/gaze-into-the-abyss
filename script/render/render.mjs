@@ -84,6 +84,8 @@ const encoder = (path, fadeOutAt) => {
     "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
     ...(options.encoder.startsWith("hevc") ? ["-tag:v", "hvc1"] : []), "-movflags", "+faststart", "-f", "mp4", path], { stdio: ["pipe", "inherit", "inherit"] })
   const closed = new Promise((resolveClose, reject) => ffmpeg.on("close", (code) => (code === 0 ? resolveClose() : reject(new Error(`ffmpeg exited ${code} for ${path}`)))))
+  // A segment abandoned after a crash ends its encoder early; that failure is expected, not fatal.
+  closed.catch(() => {})
   return { stdin: ffmpeg.stdin, finish: () => { ffmpeg.stdin.end(); return closed } }
 }
 
@@ -125,36 +127,48 @@ const server = createServer((request, response) => {
 extractFrames()
 await new Promise((ready) => server.listen(0, "127.0.0.1", ready))
 const PORT = server.address().port
+let frame = 0
 
-const browser = await puppeteer.launch({
-  executablePath: CHROME,
-  headless: true,
-  // On a laptop with two GPUs, PRIME render offload puts Chrome's GL on the NVIDIA card (ANGLE over EGL: headless
-  // Chrome gets no WebGL 2 from Vulkan).
-  env: { ...process.env, __NV_PRIME_RENDER_OFFLOAD: "1", __GLX_VENDOR_LIBRARY_NAME: "nvidia", __EGL_VENDOR_LIBRARY_FILENAMES: "/usr/share/glvnd/egl_vendor.d/10_nvidia.json" },
-  args: ["--enable-gpu", "--ignore-gpu-blocklist", "--use-gl=angle", "--use-angle=gl-egl", "--hide-scrollbars", "--mute-audio",
-    "--disable-background-timer-throttling", "--disable-renderer-backgrounding"],
-})
-const page = await browser.newPage()
-page.on("console", (message) => { if (["error", "warn"].includes(message.type())) console.error("page:", message.text()) })
-page.on("pageerror", (error) => console.error("page error:", error.message))
-await page.setViewport({ width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 })
-await page.evaluateOnNewDocument(readFileSync(join(import.meta.dirname, "clock.js"), "utf8"))
-await page.goto(`http://127.0.0.1:${PORT}/#seed=${encodeURIComponent(options.seed)}&render=/render-frames`, { waitUntil: "load" })
-await page.waitForFunction(() => window.__abyss)
-const renderer = await page.evaluate(() => window.__abyss.renderer())
-log(`renderer: ${renderer}`)
-if (!/nvidia/i.test(renderer) && !options["any-gpu"]) throw new Error("not rendering on the NVIDIA GPU (pass --any-gpu to allow it)")
+let browser
+let page
+// Starts Chrome on the page, its clock at zero.
+const open = async () => {
+  browser = await puppeteer.launch({
+    executablePath: CHROME,
+    headless: true,
+    // On a laptop with two GPUs, PRIME render offload puts Chrome's GL on the NVIDIA card (ANGLE over EGL: headless
+    // Chrome gets no WebGL 2 from Vulkan).
+    env: { ...process.env, __NV_PRIME_RENDER_OFFLOAD: "1", __GLX_VENDOR_LIBRARY_NAME: "nvidia", __EGL_VENDOR_LIBRARY_FILENAMES: "/usr/share/glvnd/egl_vendor.d/10_nvidia.json" },
+    // --expose-gc: each frame leaves a 12 MB Blob that Chrome frees only once it is collected, and left to itself it
+    // runs out of blob memory within a minute of 4K; the renderer collects every GC_EVERY frames.
+    args: ["--js-flags=--expose-gc", "--enable-gpu", "--ignore-gpu-blocklist", "--use-gl=angle", "--use-angle=gl-egl", "--hide-scrollbars", "--mute-audio",
+      "--disable-background-timer-throttling", "--disable-renderer-backgrounding"],
+  })
+  page = await browser.newPage()
+  page.on("console", (message) => { if (["error", "warn"].includes(message.type())) console.error("page:", message.text()) })
+  page.on("pageerror", (error) => console.error("page error:", error.message))
+  await page.setViewport({ width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 })
+  await page.evaluateOnNewDocument(readFileSync(join(import.meta.dirname, "clock.js"), "utf8"))
+  await page.goto(`http://127.0.0.1:${PORT}/#seed=${encodeURIComponent(options.seed)}&render=/render-frames`, { waitUntil: "load" })
+  await page.waitForFunction(() => window.__abyss)
+  const renderer = await page.evaluate(() => window.__abyss.renderer())
+  log(`renderer: ${renderer}`)
+  if (!/nvidia/i.test(renderer) && !options["any-gpu"]) throw new Error("not rendering on the NVIDIA GPU (pass --any-gpu to allow it)")
+  page.on("error", (error) => console.error("page crashed:", error.message))
+  frame = 0
+}
+
 
 const STEP_MS = 1000 / FPS
-let frame = 0
-const step = (capture) => page.evaluate(async (ms, capture) => {
+const GC_EVERY = 30
+const step = (capture) => page.evaluate(async (ms, capture, collect) => {
+  if (collect) globalThis.gc()
   const started = window.__clock.realNow()
   await window.__clock.step(ms)
   const stepped = window.__clock.realNow()
   const [read, post] = capture ? await window.__abyss.send("/frame") : [0, 0]
   return [stepped - started, read, post]
-}, STEP_MS, capture).finally(() => frame++)
+}, STEP_MS, capture, capture && frame % GC_EVERY === 0).finally(() => frame++)
 
 const fastForward = async (seconds) => {
   if (seconds <= 0) return
@@ -192,6 +206,7 @@ const renderTo = async (path, endSeconds, fadeOutAt) => {
   return { frames: done, seconds, fps: done / seconds, stepMs: totals[0] / done, readMs: totals[1] / done, postMs: totals[2] / done }
 }
 
+await open()
 mkdirSync(OUT, { recursive: true })
 if (options.clip) {
   const start = Number(options.start)
@@ -205,19 +220,33 @@ if (options.clip) {
   mkdirSync(segments, { recursive: true })
   const name = (index) => join(segments, `segment-${String(index).padStart(3, "0")}.mp4`)
   const count = Math.ceil((minutes * 60) / SEGMENT_SECONDS)
-  const firstMissing = [...Array(count).keys()].find((index) => !existsSync(name(index))) ?? count
-  if (firstMissing > 0) log(`${firstMissing} of ${count} segments already rendered`)
-  // Resuming steps through the rendered part at the same 1/FPS steps, so the page is exactly where it was.
-  await fastForward(firstMissing * SEGMENT_SECONDS)
-  const started = performance.now()
-  for (let index = firstMissing; index < count; index++) {
-    const end = Math.min((index + 1) * SEGMENT_SECONDS, minutes * 60)
-    const length = end - index * SEGMENT_SECONDS
-    const fade = index === count - 1 ? Math.max(0, length - Number(options.fade)) : undefined
-    const result = await renderTo(name(index), end, fade)
-    const elapsed = (performance.now() - started) / 1000
-    const remaining = (elapsed / (index - firstMissing + 1)) * (count - index - 1)
-    log(`segment ${index + 1}/${count} done: ${result.fps.toFixed(1)} fps; about ${clock(remaining / 60)} h:min left`)
+  // A crash (the GPU process lost to a suspend, say) relaunches Chrome and resumes at the first missing segment.
+  const ATTEMPTS = 5
+  for (let attempt = 1; ; attempt++) {
+    try {
+      if (attempt > 1) await open()
+      const firstMissing = [...Array(count).keys()].find((index) => !existsSync(name(index))) ?? count
+      if (firstMissing > 0) log(`${firstMissing} of ${count} segments already rendered`)
+      // Resuming steps through the rendered part at the same 1/FPS steps, so the page is exactly where it was.
+      await fastForward(firstMissing * SEGMENT_SECONDS)
+      const started = performance.now()
+      for (let index = firstMissing; index < count; index++) {
+        const end = Math.min((index + 1) * SEGMENT_SECONDS, minutes * 60)
+        const length = end - index * SEGMENT_SECONDS
+        const fade = index === count - 1 ? Math.max(0, length - Number(options.fade)) : undefined
+        const result = await renderTo(name(index), end, fade)
+        const elapsed = (performance.now() - started) / 1000
+        const remaining = (elapsed / (index - firstMissing + 1)) * (count - index - 1)
+        log(`segment ${index + 1}/${count} done: ${result.fps.toFixed(1)} fps; about ${clock(remaining / 60)} h:min left`)
+      }
+      break
+    } catch (error) {
+      sink?.stdin.destroy()
+      sink = undefined
+      await browser.close().catch(() => {})
+      if (attempt >= ATTEMPTS) throw error
+      log(`attempt ${attempt} failed (${error.message.split("\n")[0]}); relaunching`)
+    }
   }
   const list = join(OUT, "segments.txt")
   writeFileSync(list, [...Array(count).keys()].map((index) => `file '${name(index)}'`).join("\n") + "\n")
