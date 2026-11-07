@@ -26,6 +26,7 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
 
 <script>
   import { runSoundtrack } from "../scripts/soundtrack"
+  import { sentence } from "../scripts/sentence"
 
   const audio = document.querySelector("audio")!
   // #track=<id from music.json> plays that track first; the shuffle carries on after it.
@@ -57,7 +58,7 @@ const credits = Object.fromEntries(tracks.map(({ data }) =>
     const { title, author, licence, licenceUrl, sourceUrl } = (event as CustomEvent).detail
     showingTitle.textContent = title
     showingTitle.href = sourceUrl
-    document.querySelector(".showing-author")!.textContent = `${author}.`
+    document.querySelector(".showing-author")!.textContent = sentence(author)
     showingLicence.textContent = licence
     if (licenceUrl) showingLicence.href = licenceUrl
     else showingLicence.removeAttribute("href")
