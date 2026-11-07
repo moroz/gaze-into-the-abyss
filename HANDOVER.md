@@ -11,10 +11,20 @@ random transitions, and the opening from black. This branch, `wip/videos`, adds 
 3. **Visual credits in the music caption area**, beside the play button.
 4. **A dedicated CDN for media**, so changing imagery, video or music doesn't mean redeploying it.
 
-## 1. Finding nostalgic, public-domain footage
+## 1. Finding nostalgic, free footage
 
-The site's rule still holds: public domain only (CC0 counts), checked per item, because a collection's
-general status doesn't settle each file.
+Footage may be public domain (PD, PDM, CC0) or CC BY, BY-SA, BY-NC or BY-NC-SA; NC is fine because the site is
+non-commercial (README, "Adding an image or a video"). No ND: a loop adapts the work. Check each item, because a
+collection's general status doesn't settle each file. CC items need `author` and `licence` in the schema (§3).
+
+- **Open Beelden** (openbeelden.nl): Dutch archive incl. Polygoon newsreels, 1920s–80s: beaches, cities,
+  fairs, traffic, skating. Mostly CC BY-SA, per item.
+- **Europeana** (europeana.eu): European archives' newsreels, travel films and actualities; filter by rights.
+- **Wikimedia Commons** video categories: archival film with a clear licence and author on every file.
+- **Internet Archive** home-movie and amateur-film collections (Super 8, 16 mm scans): very nostalgic,
+  licences vary by uploader.
+- **Vimeo**, searched with a CC licence filter: some vintage film scans.
+- Not usable: Pexels and Pixabay (own licences, not CC, and modern-looking), British Pathé and AP.
 
 - **Prelinger Archives** (Internet Archive, `archive.org/details/prelinger`): 1940s–70s home movies,
   travelogues, industrial and educational films. City streets, drive-ins, fairs, highways, holidays. Many
@@ -73,6 +83,7 @@ Planned design:
   - `image: image().optional()`
   - `video: z.object({ av1: z.string(), h264: z.string() }).optional()` holding CDN URLs
   - a `.refine` requiring exactly one of them
+  - `author` and `licence` (with its URL), which CC credit needs
   - generalise `nasaId` into a `sourceUrl`, since not everything comes from NASA
 - **Markup** (`Slideshow.astro`). A video slide renders
   `<video muted playsinline loop preload="none" data-av1 data-h264>`. Muted, inline video autoplays

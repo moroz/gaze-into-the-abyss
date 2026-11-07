@@ -28,9 +28,15 @@ pnpm dev
   console. `#scene=<name>` opens on that visual scene, `#t=<seconds>` sets the moment within the scenes' animation, and
   `#track=<id>` starts the music on that `music.json` entry, e.g. `/#seed=abyss&scene=liquid&track=new-world-finale`.
 
-## Adding an image
+## Adding an image or a video
 
-Use public-domain images only. Put the file in `src/assets/cosmos` and add an entry to
+Images and video backgrounds must be public domain (PD, PDM, CC0) or Creative Commons: CC BY, BY-SA, BY-NC
+or BY-NC-SA. NC is fine because the site is non-commercial; drop those items if that ever changes. Never ND
+for video: a loop is an excerpt with a crossfade, so it adapts the work. Check the licence on each item, not
+the collection. Credit the title, author, source and licence; a share-alike item makes its loop share-alike
+too, so say so in its credit.
+
+Put an image's file in `src/assets/cosmos` and add an entry to
 `src/data/cosmos.json`. The slideshow and the credits page pick it up from there.
 
 ## Changing the music
