@@ -55,13 +55,18 @@ NVIDIA card, not SwiftShader or llvmpipe. On Linux with NVIDIA, `vulkan` or `egl
 ## What happened here (Iris Xe, 20 cores, 30 GB)
 
 - `puppeteer-core` 24.10.0 added as a dev dependency; Chrome 154 is the system `google-chrome`.
-- The first sanity run (`vulkan`, `SKIP=12`, one second of capture) **hung before printing the renderer**: three
-  minutes at ~0% CPU in launch or the first `evaluate`. The `gl` and `egl` runs were still queued behind a 300 s
-  timeout when this was written. So: no timing numbers yet, and the clock shim has never run against the page.
+- The one sanity run (`vulkan`, `SKIP=12`, one second of capture) found **no WebGL 2** under `--use-angle=vulkan`, so
+  neither the overlay nor the video warp drew. Even so, **fast-forwarding 12 s took 248 s: 345 ms per step, with no
+  capture and no GL work**. At that rate, stepping alone takes about 10 hours for 30 minutes, so find where it goes
+  before anything else. The suspects are the per-frame video seeks (`step` awaits `seeked` for every video on screen,
+  fast-forward included) and the `page.evaluate` round trip per step. The run was stopped before it captured a
+  frame, and `gl` and `egl` were never tried. So there are no capture numbers yet. The shim does run against the page:
+  timers and slides advance, though whether correctly is unchecked.
 
 ## Next
 
-1. Get the renderer line printed on the laptop, then run the 10 s benchmark and look at `bench.mp4`. Check that the
+1. Get a renderer line naming the GPU on the laptop (try `egl` and `gl` if `vulkan` says "no WebGL 2"). Time one
+   step with and without the seeks. Then run the 10 s benchmark and look at `bench.mp4`. Check that the
    frame moves smoothly, that the videos play at the right speed, and that the dawn lifts and slides change.
 2. Fix what the shim gets wrong. The likely spots:
    - **Videos loading while paused.** The shim sets `preload="auto"` and turns `canplay` into `canplaythrough`. If a
