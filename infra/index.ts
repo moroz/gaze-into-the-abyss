@@ -3,7 +3,6 @@ import * as pulumi from "@pulumi/pulumi"
 
 // AWS-managed policies, looked up by ID so they never drift from AWS's definitions.
 const CACHING_OPTIMIZED = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-const SIMPLE_CORS = "60669652-455b-4ae9-85a4-c4c02393f86c"
 
 const tags = { project: "gaze-into-the-abyss", stack: pulumi.getStack() }
 
@@ -32,6 +31,21 @@ const oac = new aws.cloudfront.OriginAccessControl("media", {
 
 const originId = "media-s3"
 
+// WebGL reads video frames, so every response must carry Access-Control-Allow-Origin. AWS's Managed-SimpleCORS
+// sends it only for "simple" requests, judged by the request headers, and browsers add cache-control and priority
+// to media requests, so it withheld the header from exactly the requests that need it. This allows any header.
+const cors = new aws.cloudfront.ResponseHeadersPolicy("media-cors", {
+  comment: "Any origin may read abyss media, whatever headers the browser sends",
+  corsConfig: {
+    accessControlAllowOrigins: { items: ["*"] },
+    accessControlAllowMethods: { items: ["GET", "HEAD", "OPTIONS"] },
+    accessControlAllowHeaders: { items: ["*"] },
+    accessControlAllowCredentials: false,
+    accessControlMaxAgeSec: 86400,
+    originOverride: true,
+  },
+})
+
 // Paths are content-hashed and uploaded with `Cache-Control: public, max-age=31536000, immutable`,
 // which CachingOptimized honours, so a new file is a new URL and nothing ever needs invalidating.
 const distribution = new aws.cloudfront.Distribution("media", {
@@ -52,8 +66,7 @@ const distribution = new aws.cloudfront.Distribution("media", {
     cachedMethods: ["GET", "HEAD"],
     compress: true,
     cachePolicyId: CACHING_OPTIMIZED,
-    // Not needed for <img>, <video> or <audio>; it lets WebGL or Web Audio read media later.
-    responseHeadersPolicyId: SIMPLE_CORS,
+    responseHeadersPolicyId: cors.id,
   },
   restrictions: { geoRestriction: { restrictionType: "none" } },
   viewerCertificate: { cloudfrontDefaultCertificate: true },

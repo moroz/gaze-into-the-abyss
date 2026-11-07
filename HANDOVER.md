@@ -101,6 +101,10 @@ The trip overlay always runs at full strength. Instead, each video's `overlay` f
 
 The hue drift now runs on each picture from one shared `--hue-delay`, so it stays in step across slides.
 
+Each video also draws through a WebGL canvas (`src/scripts/video-warp.ts`) that bends the footage itself: a slow
+layered ripple, a breathing swell from the centre, and a red–blue chromatic split. The `<video crossorigin>` stays
+underneath; the canvas removes itself if WebGL, its context or the frames are unavailable.
+
 ## 5. Credits beside the music
 
 The slideshow dispatches `abyss:background` with the arriving slide's credit. `Soundtrack.astro` shows it in a
@@ -120,8 +124,10 @@ and the stack's secrets passphrase is age-encrypted in `infra/mise.toml`.
 - Origin: `https://d19iphx0l37kqa.cloudfront.net` (distribution `E2L5CTKPND5E10`)
 - Bucket: `gaze-into-the-abyss-media-f840ac64f80b9dcb6f47926108`, readable only through CloudFront
   (Origin Access Control); a direct S3 request gets 403, and so does a missing key.
-- Cache policy `CachingOptimized`, which honours the objects' own `Cache-Control`; response headers policy
-  `SimpleCORS`, so WebGL or Web Audio can read media later.
+- Cache policy `CachingOptimized`, which honours the objects' own `Cache-Control`. A response headers policy of
+  our own, `media-cors`, sends `Access-Control-Allow-Origin: *` whatever the request headers, so WebGL can read
+  video frames (§4). AWS's `Managed-SimpleCORS` does not do: it skips requests carrying `cache-control` or
+  `priority`, which browsers add to every media request.
 
 ```bash
 cd infra && aws-vault exec medic -- mise exec -- pulumi up
