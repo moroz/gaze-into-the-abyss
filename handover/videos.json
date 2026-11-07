@@ -6,7 +6,12 @@
     "licence": "Public domain",
     "sourceUrl": "https://www.nps.gov/media/video/view.htm?id=14E3D80F-155D-451F-676BF3AD738C2247",
     "file": "https://www.nps.gov/nps-audiovideo/legacy/yell/14E3D80F-155D-451F-676BF3AD738C2247/yell-Bison00267MTS1_1280x720.mp4",
-    "loop": { "start": 0, "length": 22.8, "crossfade": 2, "height": 720 },
+    "loop": {
+      "start": 0,
+      "length": 22.8,
+      "crossfade": 2,
+      "height": 720
+    },
     "overlay": "psychedelic"
   },
   {
@@ -17,7 +22,12 @@
     "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bison_bison_grazing_in_snow_(Yellowstone).ogv",
     "file": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Bison_bison_grazing_in_snow_%28Yellowstone%29.ogv",
-    "loop": { "start": 0, "length": 27, "crossfade": 2, "height": 720 },
+    "loop": {
+      "start": 0,
+      "length": 27,
+      "crossfade": 2,
+      "height": 720
+    },
     "note": "Share-alike: the loop is CC BY-SA 3.0 too."
   },
   {
@@ -27,7 +37,12 @@
     "licence": "Public domain",
     "sourceUrl": "https://www.nps.gov/media/video/view.htm?id=FD5CDC9C-155D-451F-67CEF3254947F134",
     "file": "https://www.nps.gov/nps-audiovideo/legacy/yell/FD5CDC9C-155D-451F-67CEF3254947F134/yell-341A2744MOV_1280x720.mp4",
-    "loop": { "start": 0, "length": 24.5, "crossfade": 2, "height": 720 }
+    "loop": {
+      "start": 0,
+      "length": 24.5,
+      "crossfade": 2,
+      "height": 720
+    }
   },
   {
     "name": "bison-lamar-valley-b",
@@ -36,7 +51,12 @@
     "licence": "Public domain",
     "sourceUrl": "https://www.nps.gov/media/video/view.htm?id=FE0B0B54-155D-451F-6723D2C9538825F8",
     "file": "https://www.nps.gov/nps-audiovideo/legacy/yell/FE0B0B54-155D-451F-6723D2C9538825F8/yell-341A2675_1280x720.mp4",
-    "loop": { "start": 0, "length": 18, "crossfade": 2, "height": 720 }
+    "loop": {
+      "start": 0,
+      "length": 18,
+      "crossfade": 2,
+      "height": 720
+    }
   },
   {
     "name": "joshua-tree-sunset",
@@ -45,7 +65,12 @@
     "licence": "Public domain",
     "sourceUrl": "https://www.nps.gov/jotr/learn/photosmultimedia/westentrancesunclips.htm",
     "file": "https://www.nps.gov/nps-audiovideo/audiovideo/6f460873-c705-45e0-886b-79700e371f031080p.mp4",
-    "loop": { "start": 0, "length": 15, "crossfade": 2, "height": 1080 },
+    "loop": {
+      "start": 0,
+      "length": 15,
+      "crossfade": 2,
+      "height": 1080
+    },
     "note": "Tagged bt2020c but really bt709 (a real bt2020 conversion oversaturates it): encode with ASSUME_BT709=1."
   },
   {
@@ -55,7 +80,26 @@
     "licence": "Public domain",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Time_Lapse_Clouds_above_Steens_Mountain_(36203941112).webm",
     "file": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Time_Lapse_Clouds_above_Steens_Mountain_%2836203941112%29.webm",
-    "loop": { "start": 0, "length": 28.2, "crossfade": 2, "height": 1080 },
+    "loop": {
+      "start": 0,
+      "length": 28.2,
+      "crossfade": 2,
+      "height": 1080
+    },
     "note": "The cut at 28.26 s is excluded."
+  },
+  {
+    "name": "psychedelic-medusa",
+    "title": "Psychedelic medusa, Crossota millsae",
+    "author": "NOAA Office of Ocean Exploration and Research",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Okeanos_Explorer_PR_and_USVI_Dive_8-_Psychedelic_Medusa-NOAA-1280x720.webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Okeanos_Explorer_PR_and_USVI_Dive_8-_Psychedelic_Medusa-NOAA-1280x720.webm",
+    "loop": {
+      "start": 40,
+      "length": 10,
+      "crossfade": 2,
+      "height": 720
+    }
   }
 ]

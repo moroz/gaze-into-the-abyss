@@ -108,5 +108,17 @@
       "av1": "videos/steens-mountain-clouds.6d91e3cdcf11.av1.mp4",
       "h264": "videos/steens-mountain-clouds.f8c7a5d77bc3.h264.mp4"
     }
+  },
+  {
+    "id": "psychedelic-medusa",
+    "position": 11,
+    "title": "Psychedelic medusa, Crossota millsae",
+    "author": "NOAA Office of Ocean Exploration and Research",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Okeanos_Explorer_PR_and_USVI_Dive_8-_Psychedelic_Medusa-NOAA-1280x720.webm",
+    "video": {
+      "av1": "videos/psychedelic-medusa.7c1282bfb155.av1.mp4",
+      "h264": "videos/psychedelic-medusa.61378112b594.h264.mp4"
+    }
   }
 ]
