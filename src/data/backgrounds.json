@@ -159,5 +159,41 @@
       "av1": "videos/aurora-australis-iss.a532339d4c6a.av1.mp4",
       "h264": "videos/aurora-australis-iss.c7728e8b3325.h264.mp4"
     }
+  },
+  {
+    "id": "sandhill-crane-seedskadee",
+    "position": 15,
+    "title": "Greater sandhill crane calling, Seedskadee refuge",
+    "author": "U.S. Fish & Wildlife Service, Mountain-Prairie Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Greater_sandhill_cranes_on_Seedskadee_National_Wildlife_Refuge_(25955750417).webm",
+    "video": {
+      "av1": "videos/sandhill-crane-seedskadee.c37a65dcc524.av1.mp4",
+      "h264": "videos/sandhill-crane-seedskadee.757050c17abc.h264.mp4"
+    }
+  },
+  {
+    "id": "cosumnes-river-cranes",
+    "position": 16,
+    "title": "Cranes on the wetland, Cosumnes River Preserve",
+    "author": "Bureau of Land Management, California",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cosumnes_River_Preserve_(28137244773).webm",
+    "video": {
+      "av1": "videos/cosumnes-river-cranes.a76b3b288938.av1.mp4",
+      "h264": "videos/cosumnes-river-cranes.2288fd8a4745.h264.mp4"
+    }
+  },
+  {
+    "id": "elk-grazing-snow",
+    "position": 17,
+    "title": "Elk grazing in snow, National Elk Refuge",
+    "author": "U.S. Fish & Wildlife Service",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Animals_Over_Winter_-_Life_at_the_National_Elk_Refuge.webm",
+    "video": {
+      "av1": "videos/elk-grazing-snow.d739dbde6ff3.av1.mp4",
+      "h264": "videos/elk-grazing-snow.8192de9839b2.h264.mp4"
+    }
   }
 ]

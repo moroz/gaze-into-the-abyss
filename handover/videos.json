@@ -151,5 +151,49 @@
       "crop": "iw:ih-80:0:80"
     },
     "note": "CROP drops the burnt-in timestamp; height 1000 keeps it 1920 wide, inside H.264 level 4.1."
+  },
+  {
+    "name": "sandhill-crane-seedskadee",
+    "title": "Greater sandhill crane calling, Seedskadee refuge",
+    "author": "U.S. Fish & Wildlife Service, Mountain-Prairie Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Greater_sandhill_cranes_on_Seedskadee_National_Wildlife_Refuge_(25955750417).webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/0/04/Greater_sandhill_cranes_on_Seedskadee_National_Wildlife_Refuge_%2825955750417%29.webm",
+    "loop": {
+      "start": 0.6,
+      "length": 8.8,
+      "crossfade": 1.5,
+      "height": 1080
+    },
+    "note": "The first shot only: the camera starts following the crane at about 9.5 s and a dissolve the scene filter misses comes at about 17.3 s."
+  },
+  {
+    "name": "cosumnes-river-cranes",
+    "title": "Cranes on the wetland, Cosumnes River Preserve",
+    "author": "Bureau of Land Management, California",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cosumnes_River_Preserve_(28137244773).webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Cosumnes_River_Preserve_%2828137244773%29.webm",
+    "loop": {
+      "start": 0.3,
+      "length": 22,
+      "crossfade": 2,
+      "height": 1080
+    }
+  },
+  {
+    "name": "elk-grazing-snow",
+    "title": "Elk grazing in snow, National Elk Refuge",
+    "author": "U.S. Fish & Wildlife Service",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Animals_Over_Winter_-_Life_at_the_National_Elk_Refuge.webm",
+    "file": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Animals_Over_Winter_-_Life_at_the_National_Elk_Refuge.webm",
+    "loop": {
+      "start": 169.6,
+      "length": 11.5,
+      "crossfade": 2,
+      "height": 1080
+    },
+    "note": "The grazing close-up between a cut at 168.7 s and the fade to black at 181.5 s."
   }
 ]
