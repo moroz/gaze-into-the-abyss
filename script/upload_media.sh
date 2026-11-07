@@ -44,12 +44,18 @@ for file in "$@"; do
   hash=$(shasum -a 256 "$file" | cut -c1-12)
   key="$dir/$stem.$hash$rest"
 
+  # A conditional put: S3 refuses it with 412 when the key exists, so no key is ever overwritten, even when a
+  # failed lookup (expired credentials, a network error) would otherwise read as "absent".
   if aws s3api head-object --bucket "$bucket" --key "$key" >/dev/null 2>&1; then
     echo "exists: $key" >&2
-  else
-    aws s3api put-object --bucket "$bucket" --key "$key" --body "$file" \
-      --content-type "$type" --cache-control "public, max-age=31536000, immutable" >/dev/null
+  elif output=$(aws s3api put-object --bucket "$bucket" --key "$key" --body "$file" --if-none-match '*' \
+      --content-type "$type" --cache-control "public, max-age=31536000, immutable" 2>&1); then
     echo "uploaded: $key" >&2
+  elif [[ $output == *PreconditionFailed* || $output == *412* ]]; then
+    echo "exists: $key" >&2
+  else
+    echo "$output" >&2
+    exit 1
   fi
   printf '%s\t%s/%s\n' "$file" "$origin" "$key"
 done

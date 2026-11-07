@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Needs ffmpeg built with libsvtav1 and libx264.
 set -euo pipefail
+# bc and printf read and write numbers with a dot whatever the locale.
+export LC_NUMERIC=C
 
 if [[ $# -lt 2 ]]; then
   echo "usage: $0 INPUT NAME [START_SECONDS] [LENGTH_SECONDS] [CROSSFADE_SECONDS] [HEIGHT]" >&2
@@ -30,6 +32,10 @@ retag=""
 
 # Seconds of the excerpt once sped up; everything after the speed-up is measured in these.
 played=$(echo "$length / $speed" | bc -l)
+if [[ $(echo "2 * $crossfade < $played" | bc -l) != 1 ]]; then
+  echo "$0: the excerpt plays for $(printf '%.1f' "$played")s, too short for two crossfades of ${crossfade}s; lengthen it or shorten CROSSFADE" >&2
+  exit 1
+fi
 body=$(echo "$played - $crossfade" | bc -l)
 offset=$(echo "$played - 2 * $crossfade" | bc -l)
 
