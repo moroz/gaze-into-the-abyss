@@ -27,9 +27,6 @@ KEY = Path.home() / ".ssh/id_ed25519"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 MUSIC_CATEGORY = "10"
 CHUNK = 64 * 1024 * 1024
-FILE = "Antonin_Dvorak_-_symphony_no._9_in_e_minor_%27from_the_new_world%27,_op._95_-_"
-MOVEMENT_PAGES = [("I. Adagio – Allegro molto", "i._adagio_-_allegro_molto"), ("II. Largo", "ii._largo"),
-                  ("III. Molto vivace", "iii._molto_vivace"), ("IV. Allegro con fuoco", "iv._allegro_con_fuoco")]
 
 
 def decrypt(path: Path) -> bytes:
@@ -60,36 +57,21 @@ def credentials():
     return creds
 
 
-def chapters() -> list[str]:
-    """YouTube chapters for the movements, from the start times symphony.py writes beside the soundtrack."""
-    path = Path.home() / "Videos/abyss-render/new-world.chapters.txt"
-    if not path.exists():
-        return []
-    return [*path.read_text().strip().splitlines(), ""]
-
-
 def describe() -> str:
+    """Attributions and a link to the code, nothing else."""
     backgrounds = sorted(json.loads((ROOT / "src/data/backgrounds.json").read_text()), key=lambda entry: entry["position"])
     lines = [
-        "An hour of Gaze into the Abyss: space photos and nature footage, warped and recoloured, with a shader "
-        "drawn over them. Rendered frame by frame from the site's code: https://github.com/moroz/gaze-into-the-abyss",
+        "Music: Antonín Dvořák, Symphony No. 9 \"From the New World\", public domain, slowed down and reverberated.",
         "",
-        "Music: Dvořák, Symphony No. 9 in E minor, \"From the New World\" (1893), all four movements, played at about "
-        "70% speed with a long reverb. Musopen recording, public domain:",
-        *[f"- {name}: https://commons.wikimedia.org/wiki/File:{FILE}{slug}.ogg" for name, slug in MOVEMENT_PAGES],
-        "",
-        *chapters(),
-        "Backgrounds:",
     ]
-    for entry in backgrounds:
-        author = entry["author"].rstrip(".")
+    # Public-domain imagery needs no credit; only the licensed footage is listed.
+    for entry in (entry for entry in backgrounds if entry["licence"] != "Public domain"):
         licence = f"{entry['licence']} ({entry['licenceUrl']})" if entry.get("licenceUrl") else entry["licence"]
-        lines.append(f"- {entry['title']}, {author}. {licence}. {entry['sourceUrl']}")
-    share_alike = [entry for entry in backgrounds if "SA" in entry["licence"]]
+        lines.append(f"{entry['title']}, {entry['author'].rstrip('.')}. {licence}. {entry['sourceUrl']}")
     lines += [
         "",
-        f"{len(share_alike)} of the backgrounds are CC BY-SA, so this video is CC BY-SA 4.0 too: "
-        "https://creativecommons.org/licenses/by-sa/4.0/",
+        "Licence: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/",
+        "Code: https://github.com/moroz/gaze-into-the-abyss",
     ]
     return "\n".join(lines) + "\n"
 
