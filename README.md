@@ -104,6 +104,8 @@ node script/render/render.mjs ~/Videos/abyss-render --minutes 30 --seed abyss   
 node script/render/render.mjs ~/Videos/abyss-render --clip --start 20 --seconds 10   # one clip, with timings
 ```
 
+- Run it under `systemd-inhibit --what=sleep:idle:handle-lid-switch node script/render/render.mjs …` on a laptop:
+  a suspend loses the GPU process. If Chrome dies anyway, it relaunches and resumes, up to five times.
 - It renders in one-minute segments (`<out>/segments/`) and resumes after a crash at the first one missing,
   stepping through the rendered part to get back to the same moment. The last segment fades to black, and the
   segments are joined into `<out>/abyss_<seed>_<minutes>m.mp4`. No audio: the music is muxed in afterwards.
