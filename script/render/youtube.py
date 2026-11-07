@@ -83,7 +83,7 @@ def upload(video: Path, title: str, description: str, tags: list[str], yes: bool
 
     body = {
         "snippet": {"title": title, "description": description, "tags": tags, "categoryId": MUSIC_CATEGORY,
-                    "defaultLanguage": "en", "defaultAudioLanguage": "zxx"},
+                    "defaultLanguage": "en"},
         "status": {"privacyStatus": "private", "selfDeclaredMadeForKids": False, "license": "youtube",
                    "embeddable": True},
     }
