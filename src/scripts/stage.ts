@@ -374,6 +374,11 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
     if (rendering && capturing) {
       pack(width, height)
       packedFrames++
+    } else if (rendering) {
+      // Fast-forwarding reads nothing back, so without this the GPU queue grows hundreds of 4K frames deep, and the
+      // NVIDIA driver loses the context over a heavy call (a bloom's mipmaps) at the bottom of it. Capturing frames
+      // syncs the same way with readPixels.
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, syncPixel)
     }
     return !still || veil > 0 || showings.some((showing) => busy(showing, now)) || liftAt === undefined
   }
@@ -381,6 +386,7 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
   // Render mode: the frame as yuv420p bytes, ready to read back.
   let capturing = false
   let packedFrames = 0
+  const syncPixel = new Uint8Array(4)
   const pack = (width: number, height: number): void => {
     packed = sized(gl, packed, width / 4, (height * 3) / 2)
     drawInto(gl, packed, packed.width, packed.height)
