@@ -88,20 +88,10 @@ vec3 mirrorLattice(vec2 uv, float t) {
   return spectrum(field * 1.3 - length(warp) + t * 0.02 + 0.4) * smoothstep(0.2, 0.8, field);
 }
 
-// Two drifting sets of rings interfere, as in op art or a screen door seen through another.
-vec3 moireRings(vec2 uv, float t) {
-  vec2 a = 0.3 * vec2(sin(t * 0.031), cos(t * 0.023));
-  vec2 b = 0.3 * vec2(cos(t * 0.027 + 1.3), sin(t * 0.035 + 0.4));
-  float rings = 90.0 + 20.0 * sin(t * 0.013);
-  float interference = sin(length(uv - a) * rings) * sin(length(uv - b) * rings);
-  return spectrum(length(uv) * 0.8 - t * 0.02) * smoothstep(-0.1, 0.5, interference) * 0.42;
-}
-
 vec3 scene(float index, vec2 uv) {
   if (index < 0.5) return liquidKaleidoscope(uv, time);
   if (index < 1.5) return kaliNebula(uv, time);
-  if (index < 2.5) return mirrorLattice(uv, time);
-  return moireRings(uv, time);
+  return mirrorLattice(uv, time);
 }
 
 float revealOrder(vec2 uv) {

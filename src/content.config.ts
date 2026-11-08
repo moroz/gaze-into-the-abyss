@@ -12,6 +12,8 @@ const backgrounds = defineCollection({
   schema: z.object({
     position: z.number().int().positive(),
     title: z.string(),
+    // What it shows; a mood can keep to some subjects (see scripts/mood.ts).
+    subject: z.enum(["space", "wildlife", "landscape", "sea", "fire"]),
     author: z.string(),
     licence: z.string(),
     licenceUrl: z.url().optional(),

@@ -3,6 +3,7 @@
 
 import { alternating, easeInOut } from "./easing"
 import { build, drawInto, sized, VERTEX_100, type Program, type Target } from "./gl"
+import { mood } from "./mood"
 import { randomStream } from "./random"
 import { SCENES, sceneSchedule, type SceneMoment } from "./scene-schedule"
 
@@ -11,8 +12,7 @@ const MAX_PIXELS = 1_000_000
 const FRAME_INTERVAL_MS = 1000 / 24
 const RANDOM_START_MS = 600_000
 const TAU = 2 * Math.PI
-// Its opacity breathes between these over BREATHE_S, from a random point in the cycle.
-const BREATHE: [number, number] = [0.45, 1]
+// Its opacity breathes between the mood's bounds over BREATHE_S, from a random point in the cycle.
 const BREATHE_S = 50
 const STILL_OPACITY = 0.75
 
@@ -60,7 +60,7 @@ export class Trip {
 
   opacity(now: number): number {
     if (this.options.still) return STILL_OPACITY
-    const [low, high] = BREATHE
+    const [low, high] = mood.breathe
     return low + (high - low) * alternating((now - this.loaded) / 1000 + this.breatheOffset, BREATHE_S, easeInOut)
   }
 

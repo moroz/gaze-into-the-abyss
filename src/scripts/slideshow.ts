@@ -4,8 +4,8 @@
 import { randomStream } from "./random"
 import type { Footage, VideoEffect } from "./video-warp"
 import { VIDEO_EFFECTS } from "./video-warp"
+import { mood } from "./mood"
 
-const HOLD_MS: [number, number] = [18_000, 32_000]
 const FIRST_IMAGE_PATIENCE_MS = 6_000
 const VIDEO_PATIENCE_MS = 60_000
 
@@ -21,7 +21,7 @@ export const TRANSITION_MS = {
   dissolve: 9_000,
 } as const
 export type Transition = keyof typeof TRANSITION_MS
-const TRANSITIONS = Object.keys(TRANSITION_MS) as Transition[]
+const TRANSITIONS = mood.transitions
 
 // An image's slow zoom and pan while it shows: scale, then translate (in percent of the screen), then rotate (in
 // degrees), from one pose to the other.
@@ -37,11 +37,13 @@ const DRIFTS: [Pose, Pose][] = [
 ]
 
 export type Overlay = "calm" | "psychedelic" | "hue-cycle"
+export type Subject = "space" | "wildlife" | "landscape" | "sea" | "fire"
 
 export interface SlideData {
   kind: "image" | "video"
   overlay: Overlay
   credit: Record<string, string | undefined>
+  subject: Subject
   effects?: VideoEffect[]
   distortion: number
   av1?: string
@@ -182,8 +184,9 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
   const chosenEffect = new URLSearchParams(location.hash.slice(1)).get("effect") as VideoEffect | null
   const effectFor = (slide: Slide): VideoEffect => {
     if (chosenEffect && VIDEO_EFFECTS.includes(chosenEffect)) return chosenEffect
-    const suited = (slide.data.effects ?? []).filter((name) => VIDEO_EFFECTS.includes(name))
-    return effects.pick(suited.length ? suited : VIDEO_EFFECTS)
+    const allowed = mood.effects ?? VIDEO_EFFECTS
+    const suited = (slide.data.effects ?? []).filter((name) => allowed.includes(name))
+    return effects.pick(suited.length ? suited : allowed)
   }
 
   const hueDelay = random() * 180
@@ -213,7 +216,7 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
     let strength = 1
     if (arriving.video) {
       effect = effectFor(arriving)
-      strength = Number((arriving.data.distortion * distortions.between(0.6, 1.25)).toFixed(2))
+      strength = Number((arriving.data.distortion * mood.distortion * distortions.between(0.6, 1.25)).toFixed(2))
       arriving.video.play()
     }
     current = { slide: arriving, transition, arrivedAt: now, drift, driftMs: holdMs + TRANSITION_MS[transition], pace, effect, strength }
@@ -241,7 +244,7 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
     setTimeout(async () => {
       const next = await ready
       upcoming = undefined
-      const hold = between(...HOLD_MS)
+      const hold = between(...mood.holdMs)
       if (next) show(next, pick(TRANSITIONS), hold)
       continueAfter(hold)
     }, holdMs)
@@ -253,7 +256,7 @@ export function runSlideshow(slides: Slide[], onChange: () => void, track: <T>(p
     let first = next()
     const outcome = await within(load(first).then((ok) => (ok ? "loaded" : "failed")), FIRST_IMAGE_PATIENCE_MS, "slow")
     if (outcome === "failed") first = (await prepare()) ?? first
-    const hold = between(...HOLD_MS)
+    const hold = between(...mood.holdMs)
     show(first, "crossfade", hold)
     continueAfter(hold)
   })()

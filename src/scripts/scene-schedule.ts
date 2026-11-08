@@ -1,6 +1,7 @@
+import { mood } from "./mood"
 import { randomStream } from "./random"
 
-export const SCENES = ["liquid", "nebula", "lattice", "moire"] as const
+export const SCENES = ["liquid", "nebula", "lattice"] as const
 export const TRANSITIONS = ["crossfade", "bloom", "ink", "petals"] as const
 
 const HOLD_SECONDS: [number, number] = [30, 55]
@@ -25,7 +26,8 @@ const easeInOut = (x: number): number => x * x * (3 - 2 * x)
 
 export function sceneSchedule(firstScene?: number): (seconds: number) => SceneMoment {
   const { between, pick, shuffledForever } = randomStream("scenes")
-  const nextScene = shuffledForever(SCENES.map((_, index) => index), firstScene)
+  const allowed = SCENES.map((_, index) => index).filter((index) => mood.scenes.includes(SCENES[index]))
+  const nextScene = shuffledForever(allowed, firstScene !== undefined && allowed.includes(firstScene) ? firstScene : undefined)
   const opening = nextScene()
   const segments: Segment[] = [{ scene: opening, start: 0, end: between(...HOLD_SECONDS), fade: 0, transition: 0 }]
 

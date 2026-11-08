@@ -11,6 +11,7 @@ import { alternating, clamp01, cubicBezier, easeIn, easeInOut, easeOut, linear, 
 import { brightness, contrast, hueRotate, saturate, type ColourStep } from "./colour-filters"
 import { build, drawInto, sized, type Program, type Target } from "./gl"
 import { FrameVideo } from "./render-frames"
+import { mood } from "./mood"
 import { ElementVideo, runSlideshow, TRANSITION_MS, type Showing, type Slide, type SlideData, type Slideshow } from "./slideshow"
 import { Trip } from "./trip"
 import { buildWarpPrograms, Warp, type WarpPrograms } from "./video-warp"
@@ -153,6 +154,7 @@ const busy = (showing: Showing, now: number): boolean =>
 const colouring = (showing: Showing, seconds: number, hueDelay: number, still: boolean): ColourStep[] => {
   const { slide: { data }, pace } = showing
   const hue = (period: number, delay: number): ColourStep => hueRotate(360 * looping(seconds + delay, period * pace))
+  if (mood.colour === "soft") return data.kind === "image" ? [brightness(0.85), saturate(1.1)] : [saturate(1.25), contrast(1.04)]
   if (data.kind === "image") {
     const base = [brightness(0.8), saturate(1.3), contrast(1.05)]
     return still ? base : [...base, hue(180, hueDelay)]
@@ -185,6 +187,7 @@ export function runStage({ canvas, pool, slides: data, fragment }: StageOptions)
   // Motion-sensitive visitors get only the still images.
   const slides: Slide[] = data
     .filter((slide) => !still || slide.kind !== "video")
+    .filter((slide) => !mood.subjects || mood.subjects.includes(slide.subject))
     .map((slide) => ({ data: slide, video: slide.kind === "video" ? (rendering ? new FrameVideo(slide, framesBase) : new ElementVideo(slide, pool)) : undefined }))
 
   // When rendering, loads count as instant: the renderer waits for them before the clock moves on, so a slow network

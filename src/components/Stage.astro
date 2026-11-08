@@ -9,9 +9,9 @@ const entries = (await getCollection("backgrounds")).sort(byPosition)
 const slides: SlideData[] = entries.map(({ data }) => {
   const credit = { title: data.title, author: data.author, licence: data.licence, licenceUrl: data.licenceUrl, sourceUrl: data.sourceUrl }
   const overlay = data.overlay ?? (data.video ? "calm" : "psychedelic")
-  if (data.video) return { kind: "video", overlay, credit, effects: data.effects, distortion: data.distortion ?? 1, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) }
+  if (data.video) return { kind: "video", overlay, credit, subject: data.subject, effects: data.effects, distortion: data.distortion ?? 1, av1: mediaUrl(data.video.av1), h264: mediaUrl(data.video.h264) }
   const widths = [...data.image!.widths].sort((a, b) => a.width - b.width).map(({ width, path }) => ({ width, url: mediaUrl(path) }))
-  return { kind: "image", overlay, credit, distortion: 1, widths }
+  return { kind: "image", overlay, credit, subject: data.subject, distortion: 1, widths }
 })
 
 // Without WebGL 2 the page shows the first image, still.

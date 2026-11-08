@@ -15,9 +15,9 @@ pnpm dev
   `src/data/backgrounds.json`. Each image comes in a responsive set of widths. They play in a fresh random order on every visit, each for a random
   stretch, changing by a crossfade, a dip through black, a bloom or a slow dissolve; the one on screen is credited
   beside the music.
-- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with four scenes over the imagery: a liquid
-  kaleidoscope (`liquid`), a Kali-set nebula folded into eight mirrors (`nebula`), a three-mirror kaleidoscope that
-  tiles the screen (`lattice`), and two drifting sets of rings interfering (`moire`). Their clock runs at a pace that
+- **Visuals**: a WebGL fragment shader, `src/scripts/psychedelia.frag`, with three scenes over the imagery: a liquid
+  kaleidoscope (`liquid`), a Kali-set nebula folded into eight mirrors (`nebula`), and a three-mirror kaleidoscope that
+  tiles the screen (`lattice`). Their clock runs at a pace that
   wanders between about half and one and a half times over minutes.
   `src/scripts/scene-schedule.ts` plays them in random order for random lengths, changing by a crossfade, a bloom from
   the centre, an ink-like dissolve or a petal wipe.

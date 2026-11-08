@@ -3,11 +3,11 @@
 // that moves exactly one frame per step; the stage converts each frame to yuv420p on the GPU and posts it here, and
 // ffmpeg encodes it. See the README's "Rendering a video" section.
 //
-//   node script/render/render.mjs <out-dir> [--minutes 30] [--seed abyss] [--size 3840x2160] [--fps 60]
+//   node script/render/render.mjs <out-dir> [--minutes 30] [--seed abyss] [--mood abyss] [--size 3840x2160] [--fps 60]
 //   node script/render/render.mjs <out-dir> --clip --start 20 --seconds 10     # one short clip, with timings
 //
 // The full render goes in one-minute segments (<out-dir>/segments/), so a crash resumes where it stopped; the last
-// fades to black, and the segments are joined into <out-dir>/abyss_<seed>_<minutes>m.mp4.
+// fades to black, and the segments are joined into <out-dir>/<mood>_<seed>_<minutes>m.mp4.
 
 import { execFileSync, spawn } from "node:child_process"
 import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
@@ -23,6 +23,7 @@ const { values: options, positionals } = parseArgs({
   options: {
     minutes: { type: "string", default: "30" },
     seed: { type: "string", default: "abyss" },
+    mood: { type: "string", default: "abyss" },
     size: { type: "string", default: "3840x2160" },
     fps: { type: "string", default: "60" },
     clip: { type: "boolean", default: false },
@@ -162,7 +163,7 @@ const open = async () => {
   })
   await page.setViewport({ width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 })
   await page.evaluateOnNewDocument(readFileSync(join(import.meta.dirname, "clock.js"), "utf8"))
-  await page.goto(`http://127.0.0.1:${PORT}/#seed=${encodeURIComponent(options.seed)}&render=/render-frames`, { waitUntil: "load" })
+  await page.goto(`http://127.0.0.1:${PORT}/#seed=${encodeURIComponent(options.seed)}&mood=${encodeURIComponent(options.mood)}&render=/render-frames`, { waitUntil: "load" })
   await page.waitForFunction(() => window.__abyss)
   const renderer = await page.evaluate(() => window.__abyss.renderer())
   log(`renderer: ${renderer}`)
@@ -231,7 +232,7 @@ mkdirSync(OUT, { recursive: true })
 if (options.clip) {
   const start = Number(options.start)
   await fastForward(start)
-  const path = join(OUT, `clip_${options.seed}_${start}s.mp4`)
+  const path = join(OUT, `clip_${options.mood}_${options.seed}_${start}s.mp4`)
   const result = await renderTo(path, start + Number(options.seconds))
   log(`${path}: ${result.frames} frames in ${result.seconds.toFixed(1)} s, ${result.fps.toFixed(1)} fps (step ${result.stepMs.toFixed(1)} ms, read ${result.readMs.toFixed(1)} ms, upload wait ${result.postMs.toFixed(1)} ms)`)
 } else {
@@ -242,7 +243,7 @@ if (options.clip) {
   const count = Math.ceil((minutes * 60) / SEGMENT_SECONDS)
   // Segments only resume into the run that made them: another seed, size, rate or length (the last segment's fade)
   // would not join up.
-  const params = JSON.stringify({ seed: options.seed, size: options.size, fps: FPS, minutes, fade: options.fade, encoder: options.encoder, quality: options.quality })
+  const params = JSON.stringify({ seed: options.seed, ...(options.mood === "abyss" ? {} : { mood: options.mood }), size: options.size, fps: FPS, minutes, fade: options.fade, encoder: options.encoder, quality: options.quality })
   const paramsPath = join(segments, "params.json")
   const rendered = readdirSync(segments).some((file) => file.endsWith(".mp4"))
   if (existsSync(paramsPath) && readFileSync(paramsPath, "utf8") !== params) {
@@ -282,7 +283,7 @@ if (options.clip) {
   }
   const list = join(OUT, "segments.txt")
   writeFileSync(list, [...Array(count).keys()].map((index) => `file '${name(index)}'`).join("\n") + "\n")
-  const final = join(OUT, `abyss_${options.seed}_${minutes}m.mp4`)
+  const final = join(OUT, `${options.mood}_${options.seed}_${minutes}m.mp4`)
   execFileSync(FFMPEG, ["-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", final])
   log(`done: ${final}`)
 }
