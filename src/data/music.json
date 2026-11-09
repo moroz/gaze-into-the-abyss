@@ -67,24 +67,8 @@
     "lastBar": 207
   },
   {
-    "id": "ode-to-joy-bagpipes",
-    "position": 5,
-    "file": "ode-to-joy-bagpipes-adrift.mp3",
-    "path": "music/ode-to-joy-bagpipes-adrift.d640c5bb97df.mp3",
-    "title": "Joy on the Pipes, Adrift",
-    "composer": "Ludwig van Beethoven",
-    "work": "Symphony No. 9 in D minor, Op. 125, IV, the Ode to Joy theme (1824), for bagpipe, organ and drum machine",
-    "arrangement": "At half the recorded tempo, at its pitch.",
-    "edition": "recording by The Rock Piper, CC BY-SA 3.0; this rendering is shared alike",
-    "editionUrl": "https://archive.org/details/OdeAnDieFreude3",
-    "source": "https://archive.org/download/OdeAnDieFreude3/OdeAnDieFreude3.mp3",
-    "member": "rock-piper-ode-to-joy.mp3",
-    "sha256": "e70bb98bf953ac0dae96ba8b316cf11afef13bef8f26c654585c781ec7a90a46",
-    "slowdown": 0.5
-  },
-  {
     "id": "ode-to-joy-1923",
-    "position": 6,
+    "position": 5,
     "file": "ode-to-joy-1923-adrift.mp3",
     "path": "music/ode-to-joy-1923-adrift.745b05c4eba7.mp3",
     "title": "Joy in 1923, Adrift",

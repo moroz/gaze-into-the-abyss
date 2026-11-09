@@ -14,13 +14,12 @@ video description, not on screen.
   two 4.0). Nothing is NC, so monetising is fine. Because of the BY-SA loops, the video has to be shared alike: say
   "CC BY-SA 4.0" in the description. YouTube's own licence setting only offers Standard or CC BY, so the description
   carries it. If a video free of share-alike is wanted, leave those three out (`/credits` marks them).
-- **Music** (for later): of the six tracks only "Joy on the Pipes" (The Rock Piper) is BY-SA; the rest are public
-  domain.
+- **Music** (for later): the five tracks are all public domain (the BY-SA bagpipe "Joy on the Pipes" was dropped from
+  the site).
 
 ## Music, for later
 
-The six tracks on the CDN come to 47:40 played once (6:04, 12:41, 14:39, 6:23, 6:09, 1:45), or 41:31 without the
-bagpipes. They are 96 kbps MP3s, which is too thin for YouTube: re-render them from `sources/` with
+The five tracks on the CDN come to 41:31 played once (6:04, 12:41, 14:39, 6:23, 1:45). They are 96 kbps MP3s, which is too thin for YouTube: re-render them from `sources/` with
 `script/render_soundtrack.py` to WAV (it already makes `dry.wav` on the way; it needs a lossless output option).
 
 ## What was done
