@@ -310,5 +310,131 @@
       "h264": "videos/elk-grazing-snow.8192de9839b2.h264.mp4"
     },
     "distortion": 0.8
+  },
+  {
+    "id": "pelicans-seedskadee",
+    "position": 18,
+    "title": "American white pelicans, Seedskadee refuge",
+    "subject": "wildlife",
+    "author": "U.S. Fish & Wildlife Service, Mountain-Prairie Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:American_white_pelican_on_Seedskadee_National_Wildlife_Refuge_(36776392530).webm",
+    "video": {
+      "av1": "videos/pelicans-seedskadee.21b06d63ca2c.av1.mp4",
+      "h264": "videos/pelicans-seedskadee.ae25906b9e1c.h264.mp4"
+    },
+    "distortion": 0.6
+  },
+  {
+    "id": "eagle-nest-seedskadee",
+    "position": 19,
+    "title": "Bald eagle feeding eaglets, Seedskadee refuge",
+    "subject": "wildlife",
+    "author": "U.S. Fish & Wildlife Service, Mountain-Prairie Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bald_eagle_feeding_eaglets_at_Seedskadee_National_Wildlife_Refuge_(39930814005).webm",
+    "video": {
+      "av1": "videos/eagle-nest-seedskadee.2994f4f90781.av1.mp4",
+      "h264": "videos/eagle-nest-seedskadee.3aa0f85ee6f7.h264.mp4"
+    },
+    "distortion": 0.6
+  },
+  {
+    "id": "cardinal-snow",
+    "position": 20,
+    "title": "Cardinal in the snow",
+    "subject": "wildlife",
+    "author": "U.S. Fish & Wildlife Service, Midwest Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cardinal_in_the_Snow_(30761094854).webm",
+    "video": {
+      "av1": "videos/cardinal-snow.197b50eb4e2a.av1.mp4",
+      "h264": "videos/cardinal-snow.8ef8bad9a79c.h264.mp4"
+    },
+    "distortion": 0.7
+  },
+  {
+    "id": "elk-rut-autumn",
+    "position": 21,
+    "title": "Elk in autumn",
+    "subject": "wildlife",
+    "author": "U.S. Fish & Wildlife Service, National Conservation Training Center",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Elk_(Cervus_canadensis).webm",
+    "video": {
+      "av1": "videos/elk-rut-autumn.2d4761d9f53c.av1.mp4",
+      "h264": "videos/elk-rut-autumn.79d1599b16cf.h264.mp4"
+    },
+    "distortion": 0.6
+  },
+  {
+    "id": "hanalei-wetland",
+    "position": 22,
+    "title": "Hanalei National Wildlife Refuge",
+    "subject": "landscape",
+    "author": "U.S. Fish & Wildlife Service, Pacific Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hanalei_National_Wildlife_Refuge_(37212507691).webm",
+    "video": {
+      "av1": "videos/hanalei-wetland.8b32c0ae9a4d.av1.mp4",
+      "h264": "videos/hanalei-wetland.4ffa1d868fac.h264.mp4"
+    },
+    "distortion": 0.5
+  },
+  {
+    "id": "lost-lake-walk",
+    "position": 23,
+    "title": "Forest at Lost Lake, Oregon",
+    "subject": "landscape",
+    "author": "Bureau of Land Management, Oregon & Washington",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lost_Lake_(33243542330).webm",
+    "video": {
+      "av1": "videos/lost-lake-walk.98e3375a304f.av1.mp4",
+      "h264": "videos/lost-lake-walk.08afd8059fcd.h264.mp4"
+    },
+    "distortion": 0.5
+  },
+  {
+    "id": "lost-lake-pond",
+    "position": 24,
+    "title": "Lost Lake, Oregon",
+    "subject": "landscape",
+    "author": "Bureau of Land Management, Oregon & Washington",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lost_Lake_(33626959135).webm",
+    "video": {
+      "av1": "videos/lost-lake-pond.ff84bdf53ce6.av1.mp4",
+      "h264": "videos/lost-lake-pond.9ce796d6d4c0.h264.mp4"
+    },
+    "distortion": 0.5
+  },
+  {
+    "id": "moose-seedskadee",
+    "position": 25,
+    "title": "Moose, Seedskadee refuge",
+    "subject": "wildlife",
+    "author": "U.S. Fish & Wildlife Service, Mountain-Prairie Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Moose_at_Seedskadee_National_Wildlife_Refuge.webm",
+    "video": {
+      "av1": "videos/moose-seedskadee.ecb74ea970da.av1.mp4",
+      "h264": "videos/moose-seedskadee.7f412cc1ea9c.h264.mp4"
+    },
+    "distortion": 0.6
+  },
+  {
+    "id": "trumpeter-swans-seedskadee",
+    "position": 26,
+    "title": "Trumpeter swan family, Seedskadee refuge",
+    "subject": "wildlife",
+    "author": "U.S. Fish & Wildlife Service, Mountain-Prairie Region",
+    "licence": "Public domain",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trumpeter_swan_family_group_on_Seedskadee_National_Wildlife_Refuge_(26473603169).webm",
+    "video": {
+      "av1": "videos/trumpeter-swans-seedskadee.ed03cf851014.av1.mp4",
+      "h264": "videos/trumpeter-swans-seedskadee.4a82050c0292.h264.mp4"
+    },
+    "distortion": 0.6
   }
 ]

@@ -10,6 +10,7 @@
 // fades to black, and the segments are joined into <out-dir>/<mood>_<seed>_<minutes>m.mp4.
 
 import { execFileSync, spawn } from "node:child_process"
+import { createHash } from "node:crypto"
 import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { createServer } from "node:http"
 import { homedir } from "node:os"
@@ -61,7 +62,11 @@ const extractFrames = () => {
     if (!video) continue
     const stem = video.h264.split("/").pop().replace(/\.mp4$/, "")
     if (manifest[stem]) continue
-    const url = `${origin}/${video.h264}`
+    // A loop made by make_loop.sh but not uploaded yet is read from media/, if its bytes match the hash in its path.
+    const local = join(ROOT, "media", video.h264.split("/").pop().replace(/\.([0-9a-f]{12})\.h264\.mp4$/, ".h264.mp4"))
+    const hash = video.h264.match(/\.([0-9a-f]{12})\.h264\.mp4$/)?.[1]
+    const matches = existsSync(local) && hash && createHash("sha256").update(readFileSync(local)).digest("hex").startsWith(hash)
+    const url = matches ? local : `${origin}/${video.h264}`
     const dir = join(FRAMES, stem)
     log(`extracting frames of ${stem}`)
     rmSync(dir, { recursive: true, force: true })
